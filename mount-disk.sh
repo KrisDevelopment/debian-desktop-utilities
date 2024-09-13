@@ -39,8 +39,37 @@ add_to_fstab() {
   echo "Ownership of the mount point has been set to $username."
 }
 
-# List available disks
-list_disks
+echo "This script will help you mount a disk permanently or temporarily on your system."
 
-# Prompt the user to add a disk to /etc/fstab
-add_to_fstab
+echo "Select permanent or temporary mount:"
+options=("Permanent" "Temporary")
+
+select option in "${options[@]}"; do
+  case $option in
+    "Permanent")
+      list_disks
+      add_to_fstab
+      break
+      ;;
+    "Temporary")
+      # run ./mount-temp.sh
+
+      current_dir=$(pwd)
+      script_dir=$(dirname "$0")
+      script_path="$current_dir/$script_dir/mount-temp.sh"
+
+      if [ -f "$script_path" ]; then
+        bash "$script_path"
+      else
+        echo "Script not found: $script_path"
+        exit 1
+      fi
+
+      echo "The disk has been mounted temporarily."
+      break
+      ;;
+    *)
+      echo "Invalid option. Please select Permanent or Temporary."
+      ;;
+  esac
+done
