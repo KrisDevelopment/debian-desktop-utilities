@@ -65,7 +65,6 @@ select option in "${options[@]}"; do
         exit 1
       fi
 
-      echo "The disk has been mounted temporarily."
       break
       ;;
     "Unmount")

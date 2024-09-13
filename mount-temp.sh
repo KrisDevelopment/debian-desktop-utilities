@@ -80,8 +80,22 @@ select_mount_point() {
     if [ $? -eq 0 ] && [ -d "$mount_point" ]; then
         echo "Mount point selected: $mount_point"
     else
-        echo "Invalid mount point."
-        exit 1
+        # Create the mount point if it doesn't exist
+        echo "Do you want to create the mount point?"
+        options=("Yes" "No")
+        select option in "${options[@]}"; do
+            case $option in
+                "Yes")
+                    sudo mkdir -p "$mount_point"
+                    echo "Mount point created: $mount_point"
+                    break
+                    ;;
+                "No")
+                    echo "Operation cancelled."
+                    exit 1
+                    ;;
+            esac
+        done
     fi
 }
 
