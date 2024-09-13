@@ -42,7 +42,7 @@ add_to_fstab() {
 echo "This script will help you mount a disk permanently or temporarily on your system."
 
 echo "Select permanent or temporary mount:"
-options=("Permanent" "Temporary")
+options=("Permanent" "Temporary" "Unmount")
 
 select option in "${options[@]}"; do
   case $option in
@@ -66,6 +66,22 @@ select option in "${options[@]}"; do
       fi
 
       echo "The disk has been mounted temporarily."
+      break
+      ;;
+    "Unmount")
+      # unmounts the disk using ./unmount.sh
+
+      current_dir=$(pwd)  
+      script_dir=$(dirname "$0")
+      script_path="$current_dir/$script_dir/unmount.sh"
+
+      if [ -f "$script_path" ]; then
+        bash "$script_path"
+      else
+        echo "Script not found: $script_path"
+        exit 1
+      fi
+
       break
       ;;
     *)
