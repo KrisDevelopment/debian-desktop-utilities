@@ -73,9 +73,19 @@ select_partition() {
 # Function to prompt for mount point
 select_mount_point() {
 
-    # use standard termina to read mount point with autocomplete
-    read -e -p "Enter the mount point: " mount_point
+    # also set some default mount points at the home of the current user (e.g., /home/user/mnt/0)
+    # if a directory with the same name already exists, increment the number at the end (e.g., /home/user/mnt/1)
     
+    default_mount_point="/home/$USER/mnt/0"
+    i=0
+    while [ -d "$default_mount_point" ]; do
+        i=$((i+1))
+        default_mount_point="/home/$USER/mnt/$i"
+    done
+    
+    # use standard termina to read mount point with autocomplete
+    read -e -p "Enter the mount point (leave blank for default $default_mount_point): " mount_point
+    mount_point=${mount_point:-$default_mount_point}
 
     if [ $? -eq 0 ] && [ -d "$mount_point" ]; then
         echo "Mount point selected: $mount_point"
@@ -102,7 +112,7 @@ select_mount_point() {
 # Function to mount the selected partition
 mount_partition() {
     echo "Mounting $partition to $mount_point..."
-    sudo mount "$partition" "$mount_point"
+    sudo mount -o uid=$(id -u),gid=$(id -g) "$partition" "$mount_point"
 
     if [ $? -eq 0 ]; then
         whiptail --msgbox "$partition mounted successfully to $mount_point." 8 45
