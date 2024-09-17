@@ -18,16 +18,32 @@ remove_from_fstab() {
   # Backup existing fstab
   sudo cp /etc/fstab /etc/fstab.bak
 
-  # Remove the entry from /etc/fstab
-  sudo sed -i "/$uuid/d" /etc/fstab
+  # Validate UUID exists in current disk list
+  if ! lsblk -o UUID | grep -q "$uuid"; then
+    echo "Error: UUID not found."
+    exit 1
+  fi
 
-  # Unmount the disk
-  sudo umount "$mountpoint"
+  # Remove the entry from /etc/fstab safely
+  sudo sed -i "\|$uuid|d" /etc/fstab
 
-  # Remove the mount point
-  sudo rm -r "$mountpoint"
+  # Unmount the disk and remove mount point if user wants to
+  if sudo umount "$mountpoint"; then
+    # Avoid removing critical directories
+    if [[ "$mountpoint" == "/" || "$mountpoint" == "/home" || "$mountpoint" == "/var" ]]; then
+      echo "Error: Refusing to remove system-critical mount point."
+      exit 1
+    fi
 
-  echo "The disk has been unmounted and removed from /etc/fstab successfully."
+    read -p "Do you want to remove the mount point directory? (y/n): " remove_dir
+    if [[ "$remove_dir" == "y" ]]; then
+      sudo rm -r "$mountpoint"
+    fi
+
+    echo "The disk has been unmounted and removed from /etc/fstab successfully."
+  else
+    echo "Error unmounting $mountpoint"
+  fi
 }
 
 # Function to unmount a temporary disk
@@ -35,30 +51,34 @@ remove_from_fstab() {
 unmount_disk() {
   read -e -p  "Enter the mount point you want to unmount (e.g., /mnt/mydisk): " mountpoint
 
-  # Unmount the disk
-  sudo umount "$mountpoint"
+  # Unmount the disk and remove mount point
+  if sudo umount "$mountpoint"; then
 
-  # Remove the mount point
-  sudo rm -r "$mountpoint"
-
-  echo "The disk has been unmounted successfully."
+    read -p "Do you want to remove the mount point directory? (y/n): " remove_dir
+    if [[ "$remove_dir" == "y" ]]; then
+      sudo rm -r "$mountpoint"
+    fi
+    
+    echo "The disk has been unmounted successfully."
+  else
+    echo "Error unmounting $mountpoint"
+  fi
 }
 
 print_temp_mounts() {
   echo "Temporary mounts:"
-  mount | grep "/dev/"
+  mount | grep "/dev/sd\|/dev/nvme"
   echo ""
 }
-
 
 echo "This script will help you unmount a disk permanently or temporarily on your system."
 
 echo "Select permanent or temporary unmount:"
-options=("Permanent" "Temporary")
+options=("Permanent - EXPERIMENTAL" "Temporary")
 
 select option in "${options[@]}"; do
   case $option in
-    "Permanent")
+    "Permanent - EXPERIMENTAL")
       list_disks
       remove_from_fstab
       break
@@ -73,4 +93,3 @@ select option in "${options[@]}"; do
       ;;
   esac
 done
-
