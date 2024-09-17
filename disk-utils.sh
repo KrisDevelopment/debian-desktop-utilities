@@ -58,7 +58,6 @@ list_devices() {
     done
 }
 
-
 # Function to show a menu of devices
 select_device() {
     device_selection=$(whiptail --title "Select Device" --menu "Choose a device to view partitions:" 15 60 5 "${device_menu[@]}" 3>&1 1>&2 2>&3)
@@ -79,6 +78,8 @@ format_cfdisk() {
         exit 1
     fi
 
+    echo "Runnning cfdisk on $device"
+    echo "WARNING: This will format the disk. All data will be lost."
     # Run cfdisk to format the disk
     sudo cfdisk "$device"
 }
