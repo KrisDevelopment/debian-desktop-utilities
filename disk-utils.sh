@@ -1,5 +1,12 @@
 #!/bin/bash
 
+# Check if whiptail is installed
+if ! command -v whiptail &> /dev/null; then
+    echo "whiptail is not installed, but it is required for this script to function. Please install it using your package manager."
+    exit 1
+fi
+
+
 # Function to list disks with their GUIDs
 list_disks() {
   echo "Available disks and their GUIDs:"
@@ -39,24 +46,63 @@ add_to_fstab() {
   echo "Ownership of the mount point has been set to $username."
 }
 
-echo "This script will help you mount a disk permanently or temporarily on your system."
+# Function to list block devices (not partitions)
+list_devices() {
+    devices=($(lsblk -d -n -o NAME | grep '^sd'))
+    device_menu=()
 
-echo "Select permanent or temporary mount:"
-options=("Permanent" "Temporary" "Unmount")
+    for i in "${!devices[@]}"; do
+        device_name=${devices[$i]}
+        device_info=$(lsblk -d -n -o SIZE,MODEL "/dev/$device_name")
+        device_menu+=("$i" "/dev/$device_name $device_info")
+    done
+}
+
+
+# Function to show a menu of devices
+select_device() {
+    device_selection=$(whiptail --title "Select Device" --menu "Choose a device to view partitions:" 15 60 5 "${device_menu[@]}" 3>&1 1>&2 2>&3)
+
+    if [ $? -eq 0 ]; then
+        device="/dev/${devices[$device_selection]}"
+        echo "Selected device: $device"
+    else
+        echo "Operation cancelled."
+        exit 1
+    fi
+}
+
+format_cfdisk() {
+    # Check if cfdisk is installed
+    if ! command -v sudo cfdisk &> /dev/null; then
+        echo "cfdisk is not installed. Please install it using your package manager."
+        exit 1
+    fi
+
+    # Run cfdisk to format the disk
+    sudo cfdisk "$device"
+}
+
+
+
+# DRAW SCRIPT MENU
+echo "This script will help you format/mount/unmount a disk permanently or temporarily on your system."
+
+echo "Select action:"
+options=("Permanent Mount" "Temporary Mount" "Unmount" "Format")
+script_dir=$(dirname "$(realpath "$0")")
 
 select option in "${options[@]}"; do
   case $option in
-    "Permanent")
+    "Permanent Mount")
       list_disks
       add_to_fstab
       break
       ;;
-    "Temporary")
+    "Temporary Mount")
       # run ./mount-temp.sh
 
-      current_dir=$(pwd)
-      script_dir=$(dirname "$0")
-      script_path="$current_dir/$script_dir/mount-temp.sh"
+      script_path="$script_dir/mount-temp.sh"
 
       if [ -f "$script_path" ]; then
         bash "$script_path"
@@ -70,9 +116,21 @@ select option in "${options[@]}"; do
     "Unmount")
       # unmounts the disk using ./unmount.sh
 
-      current_dir=$(pwd)  
-      script_dir=$(dirname "$0")
-      script_path="$current_dir/$script_dir/unmount.sh"
+      script_path="$script_dir/unmount.sh"
+
+      if [ -f "$script_path" ]; then
+        bash "$script_path"
+      else
+        echo "Script not found: $script_path"
+        exit 1
+      fi
+
+      break
+      ;;
+    "Format")
+      list_devices
+      select_device
+      format_cfdisk
 
       if [ -f "$script_path" ]; then
         bash "$script_path"
@@ -84,7 +142,7 @@ select option in "${options[@]}"; do
       break
       ;;
     *)
-      echo "Invalid option. Please select Permanent or Temporary."
+      echo "Invalid option. Please select a valid option."
       ;;
   esac
 done
