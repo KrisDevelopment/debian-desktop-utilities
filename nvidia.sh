@@ -63,6 +63,20 @@ notebook_fan_control() {
         echo "Run 'sudo nbfc config --recommend' to recommend fan control"
     fi
     
+    # enter fan settings, 99 is safety, 100 might crash it.
+    read -p "Enter fan speed (0-99, auto): " fan_speed
+    if [ "$fan_speed" -gt 99 ]; then
+        echo "Fan speed too high, setting to 99"
+        fan_speed=99
+    fi
+
+    if [ "$fan_speed" == "auto" ]; then
+        sudo nbfc set -a
+    else
+        sudo nbfc set -s $fan_speed
+    fi
+
+    echo "Done"
 }
 
 
