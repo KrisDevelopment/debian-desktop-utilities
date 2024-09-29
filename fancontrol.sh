@@ -40,7 +40,7 @@ notebook_fan_control() {
     if [ "$fan_speed" == "auto" ]; then
         sudo nbfc set -a
     else
-        if [ "$fan_speed" -gt 99 ]; thenzz
+        if [ "$fan_speed" -gt 99 ]; then
             echo "Fan speed too high, setting to 99"
             fan_speed=99
         fi
@@ -85,10 +85,36 @@ cooler_control() {
     
 }
 
+toggle_nbfc_boot_daemon() {
+    if [ ! -f /usr/bin/nbfc ]; then
+        echo "NBFC not installed"
+        return
+    fi
+
+    if [ ! -f /etc/systemd/system/nbfc.service ]; then
+        echo "NBFC not enabled on boot"
+        read -p "Enable NBFC on boot? (y/n): " confirm
+        if [ "$confirm" == "y" ]; then
+            sudo systemctl enable nbfc
+        else
+            return
+        fi
+    else
+        echo "NBFC enabled on boot"
+        read -p "Disable NBFC on boot? (y/n): " confirm
+        if [ "$confirm" == "y" ]; then
+            sudo systemctl disable nbfc
+        else
+            return
+        fi
+    fi
+}
+
 # array of menu options
 options=(
     "Quit"
     "Set fan speeds (Notebook - NBFC)"
+    "Enable/disable nbfc on boot"
     "Cooler control"
 )
 

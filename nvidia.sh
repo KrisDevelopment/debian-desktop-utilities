@@ -31,55 +31,10 @@ install_nvidia_driver() {
 }
 
 notebook_fan_control() {
-    echo "Using nbfc Fan Control"
+    script_dir=$(dirname "$(realpath "$0")")
 
-    if [ ! -f /usr/bin/nbfc ]; then
-        echo "NBFC not installed"
-        read -p "Install NBFC? (y/n): " confirm
-        if [ "$confirm" == "y" ]; then
-
-            download_linl = "https://objects.githubusercontent.com/github-production-release-asset-2e65be/392712777/814e0891-2ea7-435d-9b3e-6dea0467052f?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=releaseassetproduction%2F20240928%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20240928T193012Z&X-Amz-Expires=300&X-Amz-Signature=fdf13732fd7034bdd3ba75723c6e69cf08b4f1f56a745c9422a74f97aab84ebd&X-Amz-SignedHeaders=host&response-content-disposition=attachment%3B%20filename%3Dnbfc-linux_0.2.7_amd64.deb&response-content-type=application%2Foctet-stream"
-            wget -O nbfc-linux_0.2.7_amd64.deb $download_linl
-            sudo dpkg -i nbfc-linux_0.2.7_amd64.deb
-            # install the package
-            sudo apt-get install -f 
-            sudo nbfc config --recommend
-            read -p "Enter config file (no quotes): " config_file
-            sudo nbfc config --set "$config_file"
-            sudo nbfc start
-
-            echp "Would you like to start NBFC on boot?"
-            read -p "Start NBFC on boot? (y/n): " confirm
-            if [ "$confirm" == "y" ]; then
-                sudo systemctl enable nbfc
-                echo "If you soft-lock your system with wrong fan settings, enter emergency mode using init=/bin/bash in grub, then mount the fs in read-write mode (mount -o remount,rw / ) and edit the config file in /etc/nbfc/nbfc.json "
-            fi
-        else
-            return
-        fi
-    else
-        echo "NBFC detected"
-        echo "Run 'sudo nbfc config --set auto' to set auto fan control"
-        echo "Run 'sudo nbfc config --recommend' to recommend fan control"
-    fi
-    
-    # enter fan settings, 99 is safety, 100 might crash it.
-    read -p "Enter fan speed (0-99, auto): " fan_speed
-    
-    if [ "$fan_speed" == "auto" ]; then
-        sudo nbfc set -a
-    else
-        if [ "$fan_speed" -gt 99 ]; then
-            echo "Fan speed too high, setting to 99"
-            fan_speed=99
-        fi
-
-        sudo nbfc set -s $fan_speed
-    fi
-
-    echo "Done"
+    $script_dir/fancontrol.sh
 }
-
 
 # My missadventures with Predator Helios 300
 
@@ -163,10 +118,9 @@ options=(
     "Quit"
     "Show GPU info"
     "Install Nvidia driver"
-    "Set fan speeds (Notebook - NBFC)"
+    "Fan and Temp Controls"
     "Set GPU clock speed",
     "Set GPU power limit",
-    "Cooler control"
 )
 
 while true; do
@@ -183,7 +137,6 @@ while true; do
         3) notebook_fan_control;;
         4) set_clock_speed;;
         5) set_power_limit;;
-        6) cooler_control;;
         *) echo "Invalid option";;
     esac
 
