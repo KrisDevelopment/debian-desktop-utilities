@@ -1,35 +1,6 @@
 #!/bin/bash
 
-
 # functions
-show_gpu_info() {
-    echo "GPU info"
-    echo "--------"
-    echo "lspci | grep -i nvidia"
-    lspci | grep -i nvidia
-    echo ""
-    echo "nvidia-smi"
-    nvidia-smi
-}
-
-install_nvidia_driver() {
-    # warn and confirm
-    echo "This will install Nvidia driver 440 and tools. No responsibility for any damage."
-    read -p "Continue? (y/n): " confirm
-    if [ "$confirm" != "y" ]; then
-        return
-    fi
-
-    # nvidia-driver-440
-    echo "Installing Nvidia driver"
-    echo "------------------------"
-    sudo apt-get install nvidia-driver-440
-    
-    # other tools
-    sudo apt-get install nvidia-settings
-    sudo apt-get install nvidia-xconfig
-}
-
 notebook_fan_control() {
     echo "Using nbfc Fan Control"
 
@@ -113,59 +84,11 @@ cooler_control() {
     fi
     
 }
-# ---------------------------------------
-
-set_clock_speed() {
-    echo "Set clock speed"
-    echo "--------------"
-
-    echo "Set new (1) or reset defaults (2) ?"
-    read -p "Enter option: " option
-    if [ "$option" == "1" ]; then
-
-        echo "Current clock speed"
-        sudo nvidia-smi -q -d CLOCK | grep "Graphics"
-
-        read -p "Enter clock speed (MHz) low: " clock_speed
-        read -p "Enter clock speed (MHz) high: " clock_speed_high
-
-        echo "nvidia-smi -lgc $clock_speed,$clock_speed_high"
-
-        sudo nvidia-smi -lgc $clock_speed,$clock_speed_high
-        
-    elif [ "$option" == "2" ]; then
-        sudo nvidia-smi -rgc
-    else
-        echo "Invalid option"
-    fi
-}
-
-set_power_limit() {
-    echo "Set power limit"
-    echo "--------------"
-
-    echo "Current power limit"
-    sudo nvidia-smi -q -d POWER | grep "Power Limit"
-    
-    read -p "Enter new power limit (W) : " power_limit
-    
-    echo "nvidia-smi -pl $power_limit"
-    sudo nvidia-smi -pl $power_limit
-
-    echo "New power limit"
-    sudo nvidia-smi -q -d POWER | grep "Power Limit"
-
-    echo "Done"
-}
 
 # array of menu options
 options=(
     "Quit"
-    "Show GPU info"
-    "Install Nvidia driver"
     "Set fan speeds (Notebook - NBFC)"
-    "Set GPU clock speed",
-    "Set GPU power limit",
     "Cooler control"
 )
 
@@ -178,12 +101,8 @@ while true; do
     read -p "Enter option: " option
     case $option in
         0) break;;
-        1) show_gpu_info;;
-        2) install_nvidia_driver;;
-        3) notebook_fan_control;;
-        4) set_clock_speed;;
-        5) set_power_limit;;
-        6) cooler_control;;
+        1) notebook_fan_control;;
+        2) cooler_control;;
         *) echo "Invalid option";;
     esac
 
