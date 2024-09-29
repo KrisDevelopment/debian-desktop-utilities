@@ -12,7 +12,14 @@ fi
 
 input_source(){
     echo "Enter the NFS server IP address or hostname:"
-    read -p "Server IP/Hostname: " server_ip
+
+    # for concurrent runs if the previous failed, auto-complete the server_ip
+    if [ -z "$server_ip" ]; then
+        read -e -p "Server IP/Hostname: " server_ip
+    else 
+        read -e -p "Server IP/Hostname (empty for $server_ip): " new_server_ip
+        server_ip=${new_server_ip:-$server_ip}
+    fi
 
     echo "Enter the NFS share path on the server (e.g., /mnt/data):"
     read -p "Share Path: " share_path
@@ -49,9 +56,16 @@ select_mount_point() {
         default_mount_point="/home/$USER/mnt/$i"
     done
     
-    # use standard termina to read mount point with autocomplete
-    read -e -p "Enter the mount point (leave blank for default $default_mount_point): " mount_point
-    mount_point=${mount_point:-$default_mount_point}
+    # reuse mount_point if it was set in the previous run
+    if [ -z "$mount_point" ]; then
+        # use standard terminal to read mount point with autocomplete
+        read -e -p "Enter the mount point (leave blank for default $default_mount_point): " mount_point
+        mount_point=${mount_point:-$default_mount_point}
+    else 
+        read -e -p "Enter the mount point (leave blank for $mount_point): " new_mount_point
+        mount_point=${new_mount_point:-$mount_point}
+    fi
+
 
     if [ $? -eq 0 ] && [ -d "$mount_point" ]; then
         echo "Mount point selected: $mount_point"
@@ -79,7 +93,7 @@ mount_nfs(){
     echo "Mounting NFS share $server_ip:$share_path to $mount_point..."
 
     # Mount the NFS share with user permissions
-    sudo mount -t nfs -o rw,hard,intr,user "$server_ip:$share_path" "$mount_point"
+    sudo mount -t nfs -o rw,hard,intr,user "$server_ip:$share_path" "$mount_point" || handle_error_mount
 
     ls -l "$mount_point"
     echo "NFS share mounted successfully to $mount_point."
@@ -106,7 +120,24 @@ make_permanent(){
     echo "NFS share added to /etc/fstab with safer network options."
 }
 
-# Main script execution
-input_source
-select_mount_point
-mount_partition
+handle_error_mount(){
+    if [ $? -ne 0 ]; then
+        echo "Failed to mount NFS share."
+        read -p "Do you want to retry? (y/n): " choice
+        if [ "$choice" == "y" ]; then
+            run
+        else
+            echo "Operation cancelled."
+            exit 1
+        fi
+    fi
+}
+
+run () {
+    # Main script execution
+    input_source
+    select_mount_point
+    mount_nfs
+}
+
+run
