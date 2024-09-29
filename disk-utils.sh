@@ -90,20 +90,35 @@ format_cfdisk() {
 echo "This script will help you format/mount/unmount a disk permanently or temporarily on your system."
 
 echo "Select action:"
-options=("Permanent Mount" "Temporary Mount" "Unmount" "Format")
+options=("Permanent Mount Device" "Temporary Mount Device" "Mount NFS" "Unmount" "Format")
 script_dir=$(dirname "$(realpath "$0")")
 
 select option in "${options[@]}"; do
   case $option in
-    "Permanent Mount")
+    "Permanent Mount Device")
       list_disks
       add_to_fstab
       break
       ;;
-    "Temporary Mount")
+    "Temporary Mount Device")
       # run ./mount-temp.sh
 
       script_path="$script_dir/mount-temp.sh"
+
+      if [ -f "$script_path" ]; then
+        bash "$script_path"
+      else
+        echo "Script not found: $script_path"
+        exit 1
+      fi
+
+      break
+      ;;
+
+    "Mount NFS")
+      # run ./mount-nfs.sh
+
+      script_path="$script_dir/mount-nfs.sh"
 
       if [ -f "$script_path" ]; then
         bash "$script_path"

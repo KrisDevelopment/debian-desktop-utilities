@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# ------------------------------------------------------------------------------
+# Mounts a pyhsical partition to a mount point with user permissions temporarily
+# ------------------------------------------------------------------------------
+
 # Check if whiptail is installed
 if ! command -v whiptail &> /dev/null; then
     echo "whiptail is not installed. Please install it using your package manager."
@@ -120,6 +124,9 @@ mount_partition() {
         whiptail --msgbox "Failed to mount $partition." 8 45
         exit 1
     fi
+
+    ls -l "$mount_point"
+    echo "Partition mounted successfully to $mount_point."
 }
 
 # Main script execution
