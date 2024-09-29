@@ -69,7 +69,7 @@ notebook_fan_control() {
     if [ "$fan_speed" == "auto" ]; then
         sudo nbfc set -a
     else
-        if [ "$fan_speed" -gt 99 ]; thenzz
+        if [ "$fan_speed" -gt 99 ]; then
             echo "Fan speed too high, setting to 99"
             fan_speed=99
         fi
