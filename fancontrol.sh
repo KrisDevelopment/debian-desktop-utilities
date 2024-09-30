@@ -3,7 +3,7 @@
 # functions
 notebook_fan_control() {
     echo "Using nbfc Fan Control"
-
+    
     if [ ! -f /usr/bin/nbfc ]; then
         echo "NBFC not installed"
         read -p "Install NBFC? (y/n): " confirm
@@ -35,16 +35,22 @@ notebook_fan_control() {
     fi
     
     # enter fan settings, 99 is safety, 100 might crash it.
-    read -p "Enter fan speed (0-99, auto): " fan_speed
+    read -p "Enter fan speed (0-99, auto, stop): " fan_speed
     
+
     if [ "$fan_speed" == "auto" ]; then
+        sudo nbfc start
         sudo nbfc set -a
+    elif [ "$fan_speed" == "stop" ]; then
+        sudo nbfc stop
     else
+        
         if [ "$fan_speed" -gt 99 ]; then
             echo "Fan speed too high, setting to 99"
             fan_speed=99
         fi
 
+        sudo nbfc start
         sudo nbfc set -s $fan_speed
     fi
 
@@ -114,7 +120,6 @@ toggle_nbfc_boot_daemon() {
 options=(
     "Quit"
     "Set fan speeds (Notebook - NBFC)"
-    "Enable/disable nbfc on boot"
     "Cooler control"
 )
 
