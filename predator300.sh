@@ -3,7 +3,7 @@
 # functions
 install ()
 {
-    script_dir_arg=$(dirname "$0")
+    script_dir_arg=$(dirname "$(realpath "$(dirname "$0")")")
     echo "Installing Predator Turbo from $script_dir_arg"
     cd $script_dir_arg/predator-turbo
     sudo ./install.sh
@@ -13,7 +13,7 @@ install ()
 
 keyboard ()
 {
-    script_dir_arg=$(dirname "$0")
+    script_dir_arg=$(dirname "$(realpath "$(dirname "$0")")")
     echo "Installing Predator Turbo from $script_dir_arg"
     cd $script_dir_arg/predator-turbo
     sudo python3 keyboard.py   
