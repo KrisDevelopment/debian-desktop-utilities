@@ -17,8 +17,9 @@ fi
 options=("Quit")
 script_dir_arg=$(dirname "$0")
 for script in $(ls $script_dir_arg/*.sh); do
-    script_name=$(basename "$script")
-    options+=("$script_name")
+    # script_name=$(basename "$script")
+    # options+=("$script_name")
+    options+=("$script")
 done
 
 while true; do

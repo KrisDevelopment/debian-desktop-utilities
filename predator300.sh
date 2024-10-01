@@ -3,17 +3,30 @@
 # functions
 install ()
 {
-    script_dir_arg=$(dirname "$(realpath "$(dirname "$0")")")
-    echo "Installing Predator Turbo from $script_dir_arg"
+
+    # the location of this script regardless of shell path
+    # script_dir_arg=$(dirname "$0")
+    echo $(dirname "$(readlink -f "$0")")
+    script_dir_arg=$(dirname "$(readlink -f "$0")")
+
+    echo "Script dir: $script_dir_arg"
+    echo "Installing Predator Turbo from $script_dir_arg/predator-turbo"
     cd $script_dir_arg/predator-turbo
-    sudo ./install.sh
+
+    # if the predator-turbo directory is empty, this means git submodule is not initialized
+    if [ ! "$(ls -A $script_dir_arg/predator-turbo)" ]; then
+        echo "Git submodule not initialized. Initializing..."
+        git submodule update --init --recursive
+    fi
+
+    sudo $script_dir_arg/predator-turbo/install.sh
 
     echo "Done. Predator Turbo button will now work"
 }
 
 keyboard ()
 {
-    script_dir_arg=$(dirname "$(realpath "$(dirname "$0")")")
+    script_dir_arg=$(dirname "$0")
     echo "Installing Predator Turbo from $script_dir_arg"
     cd $script_dir_arg/predator-turbo
     sudo python3 keyboard.py   
