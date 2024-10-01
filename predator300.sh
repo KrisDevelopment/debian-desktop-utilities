@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# TURBO and keyboard control for Predator Helios 300
+
 # functions
 install ()
 {
@@ -9,7 +11,7 @@ install ()
     echo $(dirname "$(readlink -f "$0")")
     script_dir_arg=$(dirname "$(readlink -f "$0")")
 
-    echo "Script dir: $script_dir_arg"
+    # echo "Script dir: $script_dir_arg"
     echo "Installing Predator Turbo from $script_dir_arg/predator-turbo"
     cd $script_dir_arg/predator-turbo
 
@@ -19,9 +21,16 @@ install ()
         git submodule update --init --recursive
     fi
 
-    sudo $script_dir_arg/predator-turbo/install.sh
-
-    echo "Done. Predator Turbo button will now work"
+    read -p "Temporary or permanent installation? (t/p): " install_type
+    if [ "$install_type" == "t" ]; then
+        sudo $script_dir_arg/predator-turbo/install.sh
+        echo "Done. Predator Turbo button will now work until reboot."
+    elif [ "$install_type" == "p" ]; then
+        sudo $script_dir_arg/predator-turbo/install_service.sh
+        echo "Done. Predator Turbo button will now work as a systemd service."
+    else
+        echo "Invalid option"
+    fi
 }
 
 keyboard ()
