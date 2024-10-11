@@ -1,10 +1,5 @@
 #!/bin/bash
 
-# Check for root privileges
-if [[ $EUID -ne 0 ]]; then
-   echo "This script must be run as root" 
-   exit 1
-fi
 
 # Image path 
 read -e -p "Enter the path to the image file: " IMAGE_PATH
