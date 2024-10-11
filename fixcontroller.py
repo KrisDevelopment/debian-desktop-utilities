@@ -3,15 +3,15 @@
 import os
 import sys
 
-print("Usage: fixcontroller.py [--safe], or use the run.sh script") # safety mode to prevent infinite loop
+print("Usage: fixcontroller.py [--safe], or use the fixcontroller.sh script") # safety mode to prevent infinite loop
 
 # Gamepad USB fix
 if len(sys.argv) == 1:
     # A shell script wrapper generation for externally managed environemnts (eg. deb12).
-    if not os.path.exists("run.sh"):
-        print ("First-time setup, creating ruh.sh shell script...")
+    if not os.path.exists("fixcontrollerrun.sh"):
+        print ("First-time setup, creating fixcontrollerrun.sh shell script...")
 
-        with open("run.sh", "w") as f:
+        with open("fixcontrollerrun.sh", "w") as f:
             shell_src = """#!/bin/bash
     python3 -m venv venv
     source venv/bin/activate
@@ -22,10 +22,12 @@ if len(sys.argv) == 1:
     deactivate
                 """
             f.write(shell_src)
-        os.chmod("run.sh", 0o755)
-        print("Shell script created. Run it with ./run.sh")
+        os.chmod("fixcontrollerrun.sh", 0o755)
+        print("Shell script created. Run it with ./fixcontrollerrun.sh")
         # run the shell script
-        os.system("sudo ./run.sh")  # run the shell script
+        os.system("sudo ./fixcontrollerrun.sh")  # run the shell script
+        # delete the script
+        os.system("rm ./fixcontrollerrun.sh")
         exit()
 
     exit()
