@@ -20,14 +20,10 @@ install_nvidia_driver() {
         return
     fi
 
-    # nvidia-driver-440
-    echo "Installing Nvidia driver"
-    echo "------------------------"
-    sudo apt-get install nvidia-driver-440
+    # run the installation script from install/install-nvidia-non-free.sh
+    script_dir=$(dirname "$(realpath "$0")")
+    $script_dir/install/install-nvidia-non-free.sh
     
-    # other tools
-    sudo apt-get install nvidia-settings
-    sudo apt-get install nvidia-xconfig
 }
 
 notebook_fan_control() {

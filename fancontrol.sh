@@ -3,17 +3,18 @@
 # functions
 notebook_fan_control() {
     echo "Using nbfc Fan Control"
+    # Find the NBFC project here: https://github.com/nbfc-linux/nbfc-linux
     
     if [ ! -f /usr/bin/nbfc ]; then
         echo "NBFC not installed"
         read -p "Install NBFC? (y/n): " confirm
         if [ "$confirm" == "y" ]; then
-
-            download_linl = "https://objects.githubusercontent.com/github-production-release-asset-2e65be/392712777/814e0891-2ea7-435d-9b3e-6dea0467052f?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=releaseassetproduction%2F20240928%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20240928T193012Z&X-Amz-Expires=300&X-Amz-Signature=fdf13732fd7034bdd3ba75723c6e69cf08b4f1f56a745c9422a74f97aab84ebd&X-Amz-SignedHeaders=host&response-content-disposition=attachment%3B%20filename%3Dnbfc-linux_0.2.7_amd64.deb&response-content-type=application%2Foctet-stream"
-            wget -O nbfc-linux_0.2.7_amd64.deb $download_linl
-            sudo dpkg -i nbfc-linux_0.2.7_amd64.deb
+            # package: https://github.com/nbfc-linux/packages/blob/main/deb/nbfc-linux_0.2.7_amd64.deb
+           
+            sudo dpkg -i nbfc-linux_0.2.7_amd64.deb || exit 1
             # install the package
             sudo apt-get install -f 
+            sudo rm nbfc-linux_0.2.7_amd64.deb
             sudo nbfc config --recommend
             read -p "Enter config file (no quotes): " config_file
             sudo nbfc config --set "$config_file"
@@ -22,7 +23,7 @@ notebook_fan_control() {
             echp "Would you like to start NBFC on boot?"
             read -p "Start NBFC on boot? (y/n): " confirm
             if [ "$confirm" == "y" ]; then
-                sudo systemctl enable nbfc
+                sudo systemctl enable nbfc_service.service 
                 echo "If you soft-lock your system with wrong fan settings, enter emergency mode using init=/bin/bash in grub, then mount the fs in read-write mode (mount -o remount,rw / ) and edit the config file in /etc/nbfc/nbfc.json "
             fi
         else

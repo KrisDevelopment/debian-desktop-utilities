@@ -90,6 +90,16 @@ select_mount_point() {
 }
 
 mount_nfs(){
+    # Check if the nfs-common package is installed
+    if ! dpkg -l | grep -q nfs-common; then
+        echo "NFS common package is not installed. Installing..."
+        sudo apt update
+        sudo apt install nfs-common -y
+    else
+        echo "NFS common package is already installed."
+    fi
+
+
     echo "Mounting NFS share $server_ip:$share_path to $mount_point..."
 
     # Mount the NFS share with user permissions

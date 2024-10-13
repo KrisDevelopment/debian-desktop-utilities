@@ -21,15 +21,12 @@ install ()
         git submodule update --init --recursive
     fi
 
-    read -p "Temporary or permanent installation? (t/p): " install_type
-    if [ "$install_type" == "t" ]; then
-        sudo $script_dir_arg/predator-turbo/install.sh
-        echo "Done. Predator Turbo button will now work until reboot."
-    elif [ "$install_type" == "p" ]; then
+    sudo $script_dir_arg/predator-turbo/install.sh
+    
+    read -p "Do you want to make this install permanent? (y/n): " -n 1 -r
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        echo "Making the install permanent..."
         sudo $script_dir_arg/predator-turbo/install_service.sh
-        echo "Done. Predator Turbo button will now work as a systemd service."
-    else
-        echo "Invalid option"
     fi
 }
 
