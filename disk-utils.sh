@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 # Check if whiptail is installed
 if ! command -v whiptail &> /dev/null; then
     echo "whiptail is not installed, but it is required for this script to function. Please install it using your package manager."
@@ -17,10 +19,35 @@ list_disks() {
 # Function to add selected disk to /etc/fstab
 add_to_fstab() {
   read -p "Enter the disk's UUID you want to mount permanently (e.g., a1b2c3d4-e5f6-7890-abcd-1234567890ab): " uuid
-  read -p "Enter the mount point (e.g., /mnt/mydisk): " mountpoint
-  read -p "Enter the filesystem type (e.g., ext4, xfs, btrfs): " fstype
+  
+  home_dir=$(eval echo ~$USER)
+  default_mount_point="$home_dir/mnt/$uuid"
+  
+  read -e -p "Enter the mount point (e.g., /mnt/mydisk) or leave empty for \"$default_mount_point\": " mountpoint
+
+  if [ -z "$mountpoint" ]; then
+    mountpoint=$default_mount_point
+  fi
+
+  read -p "Enter the filesystem type (e.g., ext4, xfs, btrfs, auto): " fstype
+
+  if [ -z "$fstype" ]; then
+    echo "Filesystem type cannot be empty."
+    exit 1
+  fi
+
+  if [ "$fstype" == "auto" ]; then
+    echo "Auto-detecting filesystem type..."
+    fstype=$(lsblk -o FSTYPE -n "/dev/disk/by-uuid/$uuid")
+    echo "Detected filesystem type: $fstype"
+  fi
+
   read -p "Enter the mount options (e.g., defaults, nofail): " options
-  read -p "Enter the username that should own the mount point: " username
+  read -p "Enter the username that should own the mount point or leave empty for \"$USER\": " username
+  
+  if [ -z "$username" ]; then
+    username=$USER
+  fi
 
   # Backup existing fstab
   sudo cp /etc/fstab /etc/fstab.bak
@@ -37,10 +64,10 @@ add_to_fstab() {
   sudo mount -a
 
   # Change ownership of the mount point
-  sudo chown -R "$username":"$username" "$mountpoint"
+  # sudo chown -R "$username":"$username" "$mountpoint"
 
   # Set permissions (optional)
-  sudo chmod -R 755 "$mountpoint"
+  # sudo chmod -R 755 "$mountpoint"
 
   echo "The disk has been mounted and added to /etc/fstab successfully."
   echo "Ownership of the mount point has been set to $username."
