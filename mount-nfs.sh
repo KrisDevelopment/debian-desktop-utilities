@@ -103,7 +103,7 @@ mount_nfs(){
     echo "Mounting NFS share $server_ip:$share_path to $mount_point..."
 
     # Mount the NFS share with user permissions
-    sudo mount -t nfs -o rw,hard,intr,user "$server_ip:$share_path" "$mount_point" || handle_error_mount
+    sudo mount -t nfs -o rw,hard,intr,user -vvvv "$server_ip:$share_path" "$mount_point" || handle_error_mount
 
     ls -l "$mount_point"
     echo "NFS share mounted successfully to $mount_point."
