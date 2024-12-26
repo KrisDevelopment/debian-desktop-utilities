@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Boost the maximum volume of an audio device using PulseAudio
+
 # List available sinks
 echo "Available audio devices:"
 pactl list short sinks | awk '{print $1 ": " $2}'

@@ -1,13 +1,12 @@
 #!/bin/bash
 
-
-# Image path 
+# Image path
 read -e -p "Enter the path to the image file: " IMAGE_PATH
 
 # Validate if the image file exists
 if [[ ! -f "$IMAGE_PATH" ]]; then
-   echo "Error: Image file does not exist."
-   exit 1
+    echo "Error: Image file does not exist."
+    exit 1
 fi
 
 # List devices and ask for the USB path
@@ -19,8 +18,8 @@ read -e -p "Enter the device path for the USB (e.g. /dev/sdb): " USB_PATH
 # Confirm the selected USB device path
 read -p "WARNING: All data on $USB_PATH will be lost. Do you want to continue? (y/n) " CONFIRM
 if [[ $CONFIRM != "y" ]]; then
-   echo "Operation cancelled."
-   exit 1
+    echo "Operation cancelled."
+    exit 1
 fi
 
 # Ensure the USB device is not mounted

@@ -49,7 +49,7 @@ remove_from_fstab() {
 # Function to unmount a temporary disk
 
 unmount_disk() {
-  read -e -p  "Enter the mount point you want to unmount (e.g., /mnt/mydisk): " mountpoint
+  read -e -p "Enter the mount point you want to unmount (e.g., /mnt/mydisk): " mountpoint
 
   # Unmount the disk and remove mount point
   if sudo umount "$mountpoint"; then
@@ -58,7 +58,7 @@ unmount_disk() {
     if [[ "$remove_dir" == "y" ]]; then
       sudo rm -r "$mountpoint"
     fi
-    
+
     echo "The disk has been unmounted successfully."
   else
     echo "Error unmounting $mountpoint"
@@ -78,18 +78,18 @@ options=("Permanent - EXPERIMENTAL" "Temporary")
 
 select option in "${options[@]}"; do
   case $option in
-    "Permanent - EXPERIMENTAL")
-      list_disks
-      remove_from_fstab
-      break
-      ;;
-    "Temporary")
-      print_temp_mounts
-      unmount_disk
-      break
-      ;;
-    *)
-      echo "Invalid option. Please select Permanent or Temporary."
-      ;;
+  "Permanent - EXPERIMENTAL")
+    list_disks
+    remove_from_fstab
+    break
+    ;;
+  "Temporary")
+    print_temp_mounts
+    unmount_disk
+    break
+    ;;
+  *)
+    echo "Invalid option. Please select Permanent or Temporary."
+    ;;
   esac
 done

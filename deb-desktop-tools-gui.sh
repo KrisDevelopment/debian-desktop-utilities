@@ -25,7 +25,7 @@ done
 while true; do
     # display menu as 1 2 3 ..
     for i in "${!options[@]}"; do
-        printf "%s %s\n" "$i" "${options[$i]}"
+        printf "%s %s\n" "$i": "${options[$i]}"
     done
 
     read -p "Enter option: " option

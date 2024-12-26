@@ -26,7 +26,7 @@ cp "$profile_file" "$profile_file.bak"
 if grep -q "export PATH=\"$custom_dir" "$profile_file"; then
     echo "Directory is already in the PATH."
 else
-    echo "export PATH=\"$custom_dir:\$PATH\"" >> "$profile_file"
+    echo "export PATH=\"$custom_dir:\$PATH\"" >>"$profile_file"
     echo "Directory added to the PATH in $profile_file"
 fi
 

@@ -5,7 +5,7 @@
 # ------------------------------------------------------------------------------
 
 # Check if whiptail is installed
-if ! command -v whiptail &> /dev/null; then
+if ! command -v whiptail &>/dev/null; then
     echo "whiptail is not installed. Please install it using your package manager."
     exit 1
 fi
@@ -37,7 +37,7 @@ select_device() {
 
 # Function to list partitions of the selected device
 list_partitions() {
-    partitions=($(lsblk -n -o NAME "$device"  --noheadings --list | grep -v '^sd$'))
+    partitions=($(lsblk -n -o NAME "$device" --noheadings --list | grep -v '^sd$'))
     partition_menu=()
 
     for i in "${!partitions[@]}"; do
@@ -73,20 +73,19 @@ select_partition() {
     fi
 }
 
-
 # Function to prompt for mount point
 select_mount_point() {
 
     # also set some default mount points at the home of the current user (e.g., /home/user/mnt/0)
     # if a directory with the same name already exists, increment the number at the end (e.g., /home/user/mnt/1)
-    
+
     default_mount_point="/home/$USER/mnt/0"
     i=0
     while [ -d "$default_mount_point" ]; do
-        i=$((i+1))
+        i=$((i + 1))
         default_mount_point="/home/$USER/mnt/$i"
     done
-    
+
     # use standard termina to read mount point with autocomplete
     read -e -p "Enter the mount point (leave blank for default $default_mount_point): " mount_point
     mount_point=${mount_point:-$default_mount_point}
@@ -99,15 +98,15 @@ select_mount_point() {
         options=("Yes" "No")
         select option in "${options[@]}"; do
             case $option in
-                "Yes")
-                    sudo mkdir -p "$mount_point"
-                    echo "Mount point created: $mount_point"
-                    break
-                    ;;
-                "No")
-                    echo "Operation cancelled."
-                    exit 1
-                    ;;
+            "Yes")
+                sudo mkdir -p "$mount_point"
+                echo "Mount point created: $mount_point"
+                break
+                ;;
+            "No")
+                echo "Operation cancelled."
+                exit 1
+                ;;
             esac
         done
     fi

@@ -3,8 +3,7 @@
 # TURBO and keyboard control for Predator Helios 300
 
 # functions
-install ()
-{
+install() {
 
     # the location of this script regardless of shell path
     # script_dir_arg=$(dirname "$0")
@@ -22,7 +21,7 @@ install ()
     fi
 
     sudo $script_dir_arg/predator-turbo/install.sh
-    
+
     read -p "Do you want to make this install permanent? (y/n): " -n 1 -r
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         echo "Making the install permanent..."
@@ -30,12 +29,11 @@ install ()
     fi
 }
 
-keyboard ()
-{
+keyboard() {
     script_dir_arg=$(dirname "$0")
     echo "Installing Predator Turbo from $script_dir_arg"
     cd $script_dir_arg/predator-turbo
-    sudo python3 keyboard.py   
+    sudo python3 keyboard.py
 }
 
 # array of menu options
@@ -53,12 +51,11 @@ while true; do
 
     read -p "Enter option: " option
     case $option in
-        0) break;;
-        1) install;;
-        2) keyboard;;
-        *) echo "Invalid option";;
+    0) break ;;
+    1) install ;;
+    2) keyboard ;;
+    *) echo "Invalid option" ;;
     esac
 
     read -p "Press to continue"
 done
-

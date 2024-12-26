@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+# 
+# If using PlatformIO, you can skip this script
+# 
+
 # https://docs.espressif.com/projects/esp-idf/en/latest/esp32/get-started/linux-macos-setup.html
 
 # install prerequisites

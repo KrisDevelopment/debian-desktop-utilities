@@ -1,3 +1,6 @@
 [submodule "predator-turbo"]
 	path = predator-turbo
 	url = https://github.com/KrisDevelopment/acer-predator-turbo-and-rgb-keyboard-linux-module
+[submodule "ai"]
+	path = ai
+	url = https://github.com/KrisDevelopment/clai

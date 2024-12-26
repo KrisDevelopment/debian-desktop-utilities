@@ -3,35 +3,9 @@
 import os
 import sys
 
-print("Usage: fixcontroller.py [--safe], or use the fixcontroller.sh script") # safety mode to prevent infinite loop
+print("Usage: fixcontroller.py [--safe, --checkdeps]") # safety mode to prevent infinite loop
 
 # Gamepad USB fix
-if len(sys.argv) == 1:
-    # A shell script wrapper generation for externally managed environemnts (eg. deb12).
-    if not os.path.exists("fixcontrollerrun.sh"):
-        print ("First-time setup, creating fixcontrollerrun.sh shell script...")
-
-        with open("fixcontrollerrun.sh", "w") as f:
-            shell_src = """#!/bin/bash
-    python3 -m venv venv
-    source venv/bin/activate
-    pip uninstall pyusb
-    pip install pyusb
-    echo "Running fixcontroller.py"
-    python3 fixcontroller.py --safe
-    deactivate
-                """
-            f.write(shell_src)
-        os.chmod("fixcontrollerrun.sh", 0o755)
-        print("Shell script created. Run it with ./fixcontrollerrun.sh")
-        # run the shell script
-        os.system("sudo ./fixcontrollerrun.sh")  # run the shell script
-        # delete the script
-        os.system("rm ./fixcontrollerrun.sh")
-        exit()
-
-    exit()
-
 if sys.argv[1] == "--safe":
     try:
         import usb.core
@@ -52,3 +26,14 @@ if sys.argv[1] == "--safe":
                 print("Controller fixed")
     finally:
         sys.exit()
+
+# Check dependencies
+if sys.argv[1] == "--checkdeps":
+    try:
+        import usb.core
+        import usb.util
+    except ImportError:
+        print("Found unmet dependencies: pyusb")
+        exit(1)
+    else:
+        exit(0)

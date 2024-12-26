@@ -1,3 +1,5 @@
+#!/bin/bash
+
 sudo wget -O discord.deb "https://discordapp.com/api/download?platform=linux&format=deb"
 # wait for download to finish
 sleep 2

@@ -5,18 +5,18 @@
 # ------------------------------------------------------------------------------
 
 # Check if whiptail is installed
-if ! command -v whiptail &> /dev/null; then
+if ! command -v whiptail &>/dev/null; then
     echo "whiptail is not installed. Please install it using your package manager."
     exit 1
 fi
 
-input_source(){
+input_source() {
     echo "Enter the NFS server IP address or hostname:"
 
     # for concurrent runs if the previous failed, auto-complete the server_ip
     if [ -z "$server_ip" ]; then
         read -e -p "Server IP/Hostname: " server_ip
-    else 
+    else
         read -e -p "Server IP/Hostname (empty for $server_ip): " new_server_ip
         server_ip=${new_server_ip:-$server_ip}
     fi
@@ -32,7 +32,7 @@ input_source(){
 
     # Check if the server IP/hostname is reachable
 
-    if ping -c 1 "$server_ip" &> /dev/null; then
+    if ping -c 1 "$server_ip" &>/dev/null; then
         echo "Server $server_ip is reachable."
     else
         read -p "Server $server_ip is not reachable. Do you want to continue? (y/n): " choice
@@ -40,7 +40,7 @@ input_source(){
             echo "Operation cancelled."
             exit 1
         fi
-    fi    
+    fi
 }
 
 # Function to prompt for mount point
@@ -48,24 +48,23 @@ select_mount_point() {
 
     # also set some default mount points at the home of the current user (e.g., /home/user/mnt/0)
     # if a directory with the same name already exists, increment the number at the end (e.g., /home/user/mnt/1)
-    
+
     default_mount_point="/home/$USER/mnt/0"
     i=0
     while [ -d "$default_mount_point" ]; do
-        i=$((i+1))
+        i=$((i + 1))
         default_mount_point="/home/$USER/mnt/$i"
     done
-    
+
     # reuse mount_point if it was set in the previous run
     if [ -z "$mount_point" ]; then
         # use standard terminal to read mount point with autocomplete
         read -e -p "Enter the mount point (leave blank for default $default_mount_point): " mount_point
         mount_point=${mount_point:-$default_mount_point}
-    else 
+    else
         read -e -p "Enter the mount point (leave blank for $mount_point): " new_mount_point
         mount_point=${new_mount_point:-$mount_point}
     fi
-
 
     if [ $? -eq 0 ] && [ -d "$mount_point" ]; then
         echo "Mount point selected: $mount_point"
@@ -75,21 +74,21 @@ select_mount_point() {
         options=("Yes" "No")
         select option in "${options[@]}"; do
             case $option in
-                "Yes")
-                    sudo mkdir -p "$mount_point"
-                    echo "Mount point created: $mount_point"
-                    break
-                    ;;
-                "No")
-                    echo "Operation cancelled."
-                    exit 1
-                    ;;
+            "Yes")
+                sudo mkdir -p "$mount_point"
+                echo "Mount point created: $mount_point"
+                break
+                ;;
+            "No")
+                echo "Operation cancelled."
+                exit 1
+                ;;
             esac
         done
     fi
 }
 
-mount_nfs(){
+mount_nfs() {
     # Check if the nfs-common package is installed
     if ! dpkg -l | grep -q nfs-common; then
         echo "NFS common package is not installed. Installing..."
@@ -98,7 +97,6 @@ mount_nfs(){
     else
         echo "NFS common package is already installed."
     fi
-
 
     echo "Mounting NFS share $server_ip:$share_path to $mount_point..."
 
@@ -114,7 +112,7 @@ mount_nfs(){
     fi
 }
 
-make_permanent(){
+make_permanent() {
     # Add the NFS share to /etc/fstab for permanent mounting
     echo "Adding NFS share to /etc/fstab with safer options for unreliable network..."
 
@@ -130,7 +128,7 @@ make_permanent(){
     echo "NFS share added to /etc/fstab with safer network options."
 }
 
-handle_error_mount(){
+handle_error_mount() {
     if [ $? -ne 0 ]; then
         echo "Failed to mount NFS share."
         read -p "Do you want to retry? (y/n): " choice
@@ -143,7 +141,7 @@ handle_error_mount(){
     fi
 }
 
-run () {
+run() {
     # Main script execution
     input_source
     select_mount_point

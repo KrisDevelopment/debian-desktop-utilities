@@ -1,8 +1,11 @@
 #!/bin/bash
+
+# Empty the trash, pretty self-explanatory
+
 sizeoftrash=$(du -sh ~/.local/share/Trash | awk '{print $1}')
 echo "Deleting $sizeoftrash from Trash ? (y/n)"
 read answer
-if [ "$answer" != "${answer#[Yy]}" ] ;then
+if [ "$answer" != "${answer#[Yy]}" ]; then
     echo "Emptying Trash..."
 else
     echo "Exiting..."

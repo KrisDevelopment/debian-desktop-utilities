@@ -3,115 +3,112 @@
 set -e
 
 # Check if whiptail is installed
-if ! command -v whiptail &> /dev/null; then
-    echo "whiptail is not installed, but it is required for this script to function. Please install it using your package manager."
-    exit 1
+if ! command -v whiptail &>/dev/null; then
+	echo "whiptail is not installed, but it is required for this script to function. Please install it using your package manager."
+	exit 1
 fi
-
 
 # Function to list disks with their GUIDs
 list_disks() {
-  echo "Available disks and their GUIDs:"
-  lsblk -o NAME,UUID,MOUNTPOINT,FSTYPE,SIZE | grep -v "loop"
-  echo ""
+	echo "Available disks and their GUIDs:"
+	lsblk -o NAME,UUID,MOUNTPOINT,FSTYPE,SIZE | grep -v "loop"
+	echo ""
 }
 
 # Function to add selected disk to /etc/fstab
 add_to_fstab() {
-  read -p "Enter the disk's UUID you want to mount permanently (e.g., a1b2c3d4-e5f6-7890-abcd-1234567890ab): " uuid
-  
-  home_dir=$(eval echo ~$USER)
-  default_mount_point="$home_dir/mnt/$uuid"
-  
-  read -e -p "Enter the mount point (e.g., /mnt/mydisk) or leave empty for \"$default_mount_point\": " mountpoint
+	read -p "Enter the disk's UUID you want to mount permanently (e.g., a1b2c3d4-e5f6-7890-abcd-1234567890ab): " uuid
 
-  if [ -z "$mountpoint" ]; then
-    mountpoint=$default_mount_point
-  fi
+	home_dir=$(eval echo ~$USER)
+	default_mount_point="$home_dir/mnt/$uuid"
 
-  read -p "Enter the filesystem type (e.g., ext4, xfs, btrfs, auto): " fstype
+	read -e -p "Enter the mount point (e.g., /mnt/mydisk) or leave empty for \"$default_mount_point\": " mountpoint
 
-  if [ -z "$fstype" ]; then
-    echo "Filesystem type cannot be empty."
-    exit 1
-  fi
+	if [ -z "$mountpoint" ]; then
+		mountpoint=$default_mount_point
+	fi
 
-  if [ "$fstype" == "auto" ]; then
-    echo "Auto-detecting filesystem type..."
-    fstype=$(lsblk -o FSTYPE -n "/dev/disk/by-uuid/$uuid")
-    echo "Detected filesystem type: $fstype"
-  fi
+	read -p "Enter the filesystem type (e.g., ext4, xfs, btrfs, auto): " fstype
 
-  read -p "Enter the mount options (e.g., defaults, nofail): " options
-  read -p "Enter the username that should own the mount point or leave empty for \"$USER\": " username
-  
-  if [ -z "$username" ]; then
-    username=$USER
-  fi
+	if [ -z "$fstype" ]; then
+		echo "Filesystem type cannot be empty."
+		exit 1
+	fi
 
-  # Backup existing fstab
-  sudo cp /etc/fstab /etc/fstab.bak
+	if [ "$fstype" == "auto" ]; then
+		echo "Auto-detecting filesystem type..."
+		fstype=$(lsblk -o FSTYPE -n "/dev/disk/by-uuid/$uuid")
+		echo "Detected filesystem type: $fstype"
+	fi
 
-  # Create mount point if it doesn't exist
-  if [ ! -d "$mountpoint" ]; then
-    sudo mkdir -p "$mountpoint"
-  fi
+	read -p "Enter the mount options (e.g., defaults, nofail): " options
+	read -p "Enter the username that should own the mount point or leave empty for \"$USER\": " username
 
-  # Add the entry to /etc/fstab
-  echo "UUID=$uuid $mountpoint $fstype $options 0 2" | sudo tee -a /etc/fstab
+	if [ -z "$username" ]; then
+		username=$USER
+	fi
 
-  # Mount the disk
-  sudo mount -a
+	# Backup existing fstab
+	sudo cp /etc/fstab /etc/fstab.bak
 
-  # Change ownership of the mount point
-  # sudo chown -R "$username":"$username" "$mountpoint"
+	# Create mount point if it doesn't exist
+	if [ ! -d "$mountpoint" ]; then
+		sudo mkdir -p "$mountpoint"
+	fi
 
-  # Set permissions (optional)
-  # sudo chmod -R 755 "$mountpoint"
+	# Add the entry to /etc/fstab
+	echo "UUID=$uuid $mountpoint $fstype $options 0 2" | sudo tee -a /etc/fstab
 
-  echo "The disk has been mounted and added to /etc/fstab successfully."
-  echo "Ownership of the mount point has been set to $username."
+	# Mount the disk
+	sudo mount -a
+
+	# Change ownership of the mount point
+	# sudo chown -R "$username":"$username" "$mountpoint"
+
+	# Set permissions (optional)
+	# sudo chmod -R 755 "$mountpoint"
+
+	echo "The disk has been mounted and added to /etc/fstab successfully."
+	echo "Ownership of the mount point has been set to $username."
 }
 
 # Function to list block devices (not partitions)
 list_devices() {
-    devices=($(lsblk -d -n -o NAME | grep '^sd'))
-    device_menu=()
+	devices=($(lsblk -d -n -o NAME | grep '^sd'))
+	device_menu=()
 
-    for i in "${!devices[@]}"; do
-        device_name=${devices[$i]}
-        device_info=$(lsblk -d -n -o SIZE,MODEL "/dev/$device_name")
-        device_menu+=("$i" "/dev/$device_name $device_info")
-    done
+	for i in "${!devices[@]}"; do
+		device_name=${devices[$i]}
+		device_info=$(lsblk -d -n -o SIZE,MODEL "/dev/$device_name")
+		device_menu+=("$i" "/dev/$device_name $device_info")
+	done
 }
 
 # Function to show a menu of devices
 select_device() {
-    device_selection=$(whiptail --title "Select Device" --menu "Choose a device to view partitions:" 15 60 5 "${device_menu[@]}" 3>&1 1>&2 2>&3)
+	device_selection=$(whiptail --title "Select Device" --menu "Choose a device to view partitions:" 15 60 5 "${device_menu[@]}" 3>&1 1>&2 2>&3)
 
-    if [ $? -eq 0 ]; then
-        device="/dev/${devices[$device_selection]}"
-        echo "Selected device: $device"
-    else
-        echo "Operation cancelled."
-        exit 1
-    fi
+	if [ $? -eq 0 ]; then
+		device="/dev/${devices[$device_selection]}"
+		echo "Selected device: $device"
+	else
+		echo "Operation cancelled."
+		exit 1
+	fi
 }
 
 format_cfdisk() {
-    # Check if cfdisk is installed
-    if ! command -v sudo cfdisk &> /dev/null; then
-        echo "cfdisk is not installed. Please install it using your package manager."
-        exit 1
-    fi
+	# Check if cfdisk is installed
+	if ! command -v sudo cfdisk &>/dev/null; then
+		echo "cfdisk is not installed. Please install it using your package manager."
+		exit 1
+	fi
 
-    echo "Runnning cfdisk on $device"
-    echo "WARNING: This will format the disk. All data will be lost."
-    # Run cfdisk to format the disk
-    sudo cfdisk "$device"
+	echo "Runnning cfdisk on $device"
+	echo "WARNING: This will format the disk. All data will be lost."
+	# Run cfdisk to format the disk
+	sudo cfdisk "$device"
 }
-
-
 
 # DRAW SCRIPT MENU
 echo "This script will help you format/mount/unmount a disk permanently or temporarily on your system."
@@ -121,71 +118,71 @@ options=("Permanent Mount Device" "Temporary Mount Device" "Mount NFS" "Unmount"
 script_dir=$(dirname "$(realpath "$0")")
 
 select option in "${options[@]}"; do
-  case $option in
-    "Permanent Mount Device")
-      list_disks
-      add_to_fstab
-      break
-      ;;
-    "Temporary Mount Device")
-      # run ./mount-temp.sh
+	case $option in
+	"Permanent Mount Device")
+		list_disks
+		add_to_fstab
+		break
+		;;
+	"Temporary Mount Device")
+		# run ./mount-temp.sh
 
-      script_path="$script_dir/mount-temp.sh"
+		script_path="$script_dir/mount-temp.sh"
 
-      if [ -f "$script_path" ]; then
-        bash "$script_path"
-      else
-        echo "Script not found: $script_path"
-        exit 1
-      fi
+		if [ -f "$script_path" ]; then
+			bash "$script_path"
+		else
+			echo "Script not found: $script_path"
+			exit 1
+		fi
 
-      break
-      ;;
+		break
+		;;
 
-    "Mount NFS")
-      # run ./mount-nfs.sh
+	"Mount NFS")
+		# run ./mount-nfs.sh
 
-      script_path="$script_dir/mount-nfs.sh"
+		script_path="$script_dir/mount-nfs.sh"
 
-      if [ -f "$script_path" ]; then
-        bash "$script_path"
-      else
-        echo "Script not found: $script_path"
-        exit 1
-      fi
+		if [ -f "$script_path" ]; then
+			bash "$script_path"
+		else
+			echo "Script not found: $script_path"
+			exit 1
+		fi
 
-      break
-      ;;
-    "Unmount")
-      # unmounts the disk using ./unmount.sh
+		break
+		;;
+	"Unmount")
+		# unmounts the disk using ./unmount.sh
 
-      script_path="$script_dir/unmount.sh"
+		script_path="$script_dir/unmount.sh"
 
-      if [ -f "$script_path" ]; then
-        bash "$script_path"
-      else
-        echo "Script not found: $script_path"
-        exit 1
-      fi
+		if [ -f "$script_path" ]; then
+			bash "$script_path"
+		else
+			echo "Script not found: $script_path"
+			exit 1
+		fi
 
-      break
-      ;;
-    "Format")
-      list_devices
-      select_device
-      format_cfdisk
+		break
+		;;
+	"Format")
+		list_devices
+		select_device
+		format_cfdisk
 
-      if [ -f "$script_path" ]; then
-        bash "$script_path"
-      else
-        echo "Script not found: $script_path"
-        exit 1
-      fi
+		if [ -f "$script_path" ]; then
+			bash "$script_path"
+		else
+			echo "Script not found: $script_path"
+			exit 1
+		fi
 
-      break
-      ;;
-    *)
-      echo "Invalid option. Please select a valid option."
-      ;;
-  esac
+		break
+		;;
+	*)
+		echo "Invalid option. Please select a valid option."
+		;;
+	esac
 done

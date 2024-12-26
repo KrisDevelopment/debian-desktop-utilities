@@ -1,6 +1,5 @@
 #!/bin/bash
 
-
 # functions
 show_gpu_info() {
     echo "GPU info"
@@ -23,7 +22,7 @@ install_nvidia_driver() {
     # run the installation script from install/install-nvidia-non-free.sh
     script_dir=$(dirname "$(realpath "$0")")
     $script_dir/install/install-nvidia-non-free.sh
-    
+
 }
 
 notebook_fan_control() {
@@ -34,12 +33,11 @@ notebook_fan_control() {
 
 # My missadventures with Predator Helios 300
 
-install_cooler_control()
-{
+install_cooler_control() {
     sudo apt-get install curl apt-transports-https
     curl -1sLf \
-  'https://dl.cloudsmith.io/public/coolercontrol/coolercontrol/setup.deb.sh' \
-  | sudo -E bash
+        'https://dl.cloudsmith.io/public/coolercontrol/coolercontrol/setup.deb.sh' |
+        sudo -E bash
     sudo apt update
     sudo apt install coolercontrol
     sudo systemctl enable --now coolercontrol
@@ -62,7 +60,7 @@ cooler_control() {
         # run GUI
         coolercontrol
     fi
-    
+
 }
 # ---------------------------------------
 
@@ -83,7 +81,7 @@ set_clock_speed() {
         echo "nvidia-smi -lgc $clock_speed,$clock_speed_high"
 
         sudo nvidia-smi -lgc $clock_speed,$clock_speed_high
-        
+
     elif [ "$option" == "2" ]; then
         sudo nvidia-smi -rgc
     else
@@ -97,9 +95,9 @@ set_power_limit() {
 
     echo "Current power limit"
     sudo nvidia-smi -q -d POWER | grep "Power Limit"
-    
+
     read -p "Enter new power limit (W) : " power_limit
-    
+
     echo "nvidia-smi -pl $power_limit"
     sudo nvidia-smi -pl $power_limit
 
@@ -127,15 +125,14 @@ while true; do
 
     read -p "Enter option: " option
     case $option in
-        0) break;;
-        1) show_gpu_info;;
-        2) install_nvidia_driver;;
-        3) notebook_fan_control;;
-        4) set_clock_speed;;
-        5) set_power_limit;;
-        *) echo "Invalid option";;
+    0) break ;;
+    1) show_gpu_info ;;
+    2) install_nvidia_driver ;;
+    3) notebook_fan_control ;;
+    4) set_clock_speed ;;
+    5) set_power_limit ;;
+    *) echo "Invalid option" ;;
     esac
 
     read -p "Press to continue"
 done
-
