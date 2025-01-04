@@ -2,6 +2,19 @@
 
 # TURBO and keyboard control for Predator Helios 300
 
+# check root
+if [[ $EUID -ne 0 ]]; then
+    echo "[*] This script must be run as root"
+    exit 1
+fi
+
+
+unattended=false
+
+if [ "$1" = "-y" ]; then
+    unattended=true
+fi
+
 # functions
 install() {
 
@@ -20,12 +33,15 @@ install() {
         git submodule update --init --recursive
     fi
 
-    sudo $script_dir_arg/predator-turbo/install.sh
+    $script_dir_arg/predator-turbo/install.sh
 
-    read -p "Do you want to make this install permanent? (y/n): " -n 1 -r
+    if [ "$unattended" = false ]; then
+        read -p "Do you want to make this install permanent? (y/n): " -n 1 -r
+    fi
+
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         echo "Making the install permanent..."
-        sudo $script_dir_arg/predator-turbo/install_service.sh
+        $script_dir_arg/predator-turbo/install_service.sh || { echo "Failed to install service"; exit 1; }
     fi
 }
 
@@ -33,8 +49,14 @@ keyboard() {
     script_dir_arg=$(dirname "$0")
     echo "Installing Predator Turbo from $script_dir_arg"
     cd $script_dir_arg/predator-turbo
-    sudo python3 keyboard.py
+    python3 keyboard.py
 }
+
+
+if [ "$unattended" = true ]; then
+    install
+    exit 0
+fi
 
 # array of menu options
 options=(
@@ -42,6 +64,7 @@ options=(
     "Install Predator Turbo"
     "Keyboard"
 )
+
 
 while true; do
     # display menu as 1 2 3 ..
