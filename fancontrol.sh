@@ -121,7 +121,7 @@ toggle_nbfc_boot_daemon() {
 options=(
     "Quit"
     "Set fan speeds (Notebook - NBFC)"
-    "Cooler control"
+    "See stats (Cooler Control)"
 )
 
 while true; do
