@@ -28,8 +28,16 @@ install() {
     fi
 
     if [[ $REPLY =~ ^[Yy]$ ]]; then
-        echo "Making the install permanent..."
-        sudo $script_dir_arg/predator-turbo/install_service.sh || { echo "Failed to install service"; exit 1; }
+        echo "Making the install run on boot..."
+        # copy the script from /resources/predator300setup to init.d
+        echo "Copying predator300setup to /etc/init.d"
+        sudo cp $script_dir_arg/resources/predator300setup /etc/init.d/predator300setup
+        sudo chmod +x /etc/init.d/predator300setup
+        # reload the init.d scripts
+        sudo systemctl daemon-reload
+        sudo update-rc.d predator300setup defaults
+        # enable the service
+        sudo systemctl enable predator300setup
     fi
 }
 
