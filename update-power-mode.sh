@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Set the CPU power mode based on whether the laptop is running on battery or AC power
+
 # Install cpufrequtils if not installed
 if ! dpkg -s cpufrequtils > /dev/null 2>&1; then
   sudo apt-get install cpufrequtils -y

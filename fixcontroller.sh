@@ -10,8 +10,8 @@ install_deps() {
 }
 
 # run the py script with --checkdeps flag to check for missing dependencies and install
-python3 fixcontroller.py --checkdeps || install_deps
+python3 fixgamepad.py --checkdeps || install_deps
 
-echo "Running fixcontroller.py"
-python3 fixcontroller.py --safe
+echo "Running fixgamepad.py"
+python3 fixgamepad.py --safe
 deactivate
