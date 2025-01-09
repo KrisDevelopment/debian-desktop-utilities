@@ -3,7 +3,7 @@
 import os
 import sys
 
-print("Usage: fixcontroller.py [--safe, --checkdeps]") # safety mode to prevent infinite loop
+print("Usage: fixgamepad.py [--safe, --checkdeps]") # safety mode to prevent infinite loop
 
 # Gamepad USB fix
 if sys.argv[1] == "--safe":
