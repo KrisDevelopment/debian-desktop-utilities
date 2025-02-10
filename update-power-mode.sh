@@ -81,18 +81,16 @@ battery_mode=$(cat /sys/class/power_supply/BAT0/status)
 
 set_max_scaling_freq () {
   # Set the CPU frequency to the specified value in Mhz
-
   echo "Setting CPU frequency to $1 Mhz"
   
   # Set the CPU governor to userspace
   sudo cpufreq-set -r -g userspace
 
+  # Convert to khz
   khz=$(echo "$1 * 1000" | bc)
 
-  echo "set: $khz"
-
   if [ $khz -lt 1000 ]; then
-    echo "Error: Invalid frequency"
+    echo "Error: Internal error - Invalid frequency"
     exit 1
   fi
   
@@ -104,10 +102,16 @@ parse_frequency_str_to_mhz() {
   max_frequency=$1
 
   if echo "$max_frequency" | grep -q "GHz"; then
-    mhz=$(echo "$max_frequency" | sed 's/\([0-9]\+\)\.[0-9][0-9] GHz/\1 * 1000/' | bc)
+    mhz=$(echo "$max_frequency" | awk '{if ($2 == "GHz") print $1 * 1000; else print $1}')
+  elif echo "$max_frequency" | grep -q "MHz"; then
+    mhz=$(echo "$max_frequency" | awk '{print $1}')
   else
-    mhz=$(echo "$max_frequency" | sed 's/\([0-9]\+\) MHz/\1/')
+    echo "0"
+    exit 1
   fi
+
+  # Convert to integer (remove decimal point)
+  mhz=$(echo $mhz | awk -F. '{print $1}')
 
   echo $mhz
 }
@@ -118,7 +122,7 @@ select_performance() {
 
   # get hardware limits
   # Eg parse "  hardware limits: 800 MHz - 5.00 GHz" to get 5.00 GHz
-  hardware_limit_max=$(cpufreq-info | grep "hardware limits" | sed -n 's/.*\([0-9]\.[0-9][0-9] GHz\).*/\1/p')
+  hardware_limit_max=$(cpufreq-info | grep "hardware limits" | sed -n 's/.*\([0-9]\.[0-9][0-9] \(MHz\|GHz\)\).*/\1/p')
   echo "Upper hardware limits detected:"
   echo "$hardware_limit_max"
 
@@ -131,8 +135,15 @@ select_performance() {
   # We want the last one
   max_frequency=$(echo "$hardware_limit_max" | tail -n 1)
 
+
   # parse GHz to Mhz, and preserve Mhz as is
-  mhz=$(parse_frequency_str_to_mhz $max_frequency)
+  mhz=$(parse_frequency_str_to_mhz "$max_frequency")
+  
+  if [ $mhz -eq 0 ]; then
+    echo "Error: Internal error - Invalid frequency. Failed to parse $max_frequency"
+    exit 1
+  fi
+
   set_max_scaling_freq $mhz
 
   # Finally restore the CPU governor to performance
@@ -156,11 +167,15 @@ select_powersave() {
   fi
 
   # $hardware_limit_min is a list of frequencies
-  # We want the first one
-
   min_frequency=$(echo "$hardware_limit_min" | head -n 1)
 
-  mhz=$(parse_frequency_str_to_mhz $min_frequency)
+  mhz=$(parse_frequency_str_to_mhz "$min_frequency")
+
+  if [ $mhz -eq 0 ]; then
+    echo "Error: Internal error - Invalid frequency. Failed to parse $min_frequency"
+    exit 1
+  fi
+
   set_max_scaling_freq $mhz
 
   # Set the CPU governor to powersave
