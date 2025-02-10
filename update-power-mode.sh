@@ -157,7 +157,7 @@ select_powersave() {
 
   # get hardware limits
   # Eg parse "  hardware limits: 800 MHz - 5.00 GHz" to get 800 MHz
-  hardware_limit_min=$(cpufreq-info | grep "hardware limits" | sed -n 's/.*hardware limits: \([0-9.]*\) \(GHz\|MHz\).*/\1 \2/p' | awk '{if ($2 == "GHz") print $1 * 1000; else print $1}')
+  hardware_limit_min=$(cpufreq-info | grep "hardware limits" | sed -n 's/.*hardware limits: \([0-9.]*\) \(GHz\|MHz\).*/\1 \2/p')
   echo "Lower hardware limits detected:"
   echo "$hardware_limit_min"
 
