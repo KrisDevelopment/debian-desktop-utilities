@@ -10,16 +10,17 @@ echo "  -m [Mhz]: Manual mode, set the max CPU frequency to [Mhz]"
 echo "  -p: Force performance mode"
 echo "  -s: Force powersave mode"
 echo "  -h: Display this help message"
+echo "  -y: Skip confirmations in default mode" # If runing without any custom options and userspace governor is not enabled, this will skip the confirmation prompt
 echo "======================================"
 
 if [ "$1" = "-h" ]; then
   exit 0
 fi
 
-interactive=0
 set_frequency=0
 forced_performance=0
 forced_powersave=0
+skip_confirmation=0
 
 if [ "$1" = "-m" ]; then
   if [ -z "$2" ]; then
@@ -31,9 +32,9 @@ elif [ "$1" = "-p" ]; then
   forced_performance=1
 elif [ "$1" = "-s" ]; then
   forced_powersave=1
+elif [ "$1" = "-y" ]; then
+  skip_confirmation=1
 fi
-
-echo "Running in $([ $interactive -eq 1 ] && echo "interactive" || echo "non-interactive") mode"
 
 # Install cpufrequtils if not installed
 if ! dpkg -s cpufrequtils > /dev/null 2>&1; then
@@ -59,21 +60,18 @@ fi
 
 # To enable userspace governor ()
 if ! cpufreq-info | grep "userspace" > /dev/null 2>&1; then
-  if [ $interactive -eq 1 ]; then
-    echo "userspace governor not found. Enable it? (y/n)"
+  if [ $skip_confirmation -eq 0 ]; then
+    echo "Warning: userspace governor not found. Enabling userspace governor will allow the script to set the CPU frequency. Do you want to enable userspace governor? (y/n)"
     read enable_userspace
-    if [ "$enable_userspace" = "y" ]; then
-      echo "Enabling userspace governor"
-      echo passive | sudo tee /sys/devices/system/cpu/intel_pstate/status
-    else
-      exit 1
+    if [ "$enable_userspace" != "y" ]; then
+      echo "Exiting"
+      exit 0
     fi
-  else
-    echo "Error: userspace governor not found"
-    # List available governors
-    cpufreq-info | grep "available cpufreq governors"
-    exit 1
   fi
+
+  echo "Enabling userspace governor"
+  echo passive | sudo tee /sys/devices/system/cpu/intel_pstate/status
+  cpufreq-info | grep "available cpufreq governors" | uniq
 fi
 
 # Discharging means the laptop is running on battery
@@ -124,7 +122,7 @@ select_performance() {
   # Eg parse "  hardware limits: 800 MHz - 5.00 GHz" to get 5.00 GHz
   hardware_limit_max=$(cpufreq-info | grep "hardware limits" | sed -n 's/.*\([0-9]\.[0-9][0-9] \(MHz\|GHz\)\).*/\1/p')
   echo "Upper hardware limits detected:"
-  echo "$hardware_limit_max"
+  echo "$hardware_limit_max" | uniq
 
   if [ -z "$hardware_limit_max" ]; then
     echo "Error: Hardware limits not found"
@@ -159,7 +157,7 @@ select_powersave() {
   # Eg parse "  hardware limits: 800 MHz - 5.00 GHz" to get 800 MHz
   hardware_limit_min=$(cpufreq-info | grep "hardware limits" | sed -n 's/.*hardware limits: \([0-9.]*\) \(GHz\|MHz\).*/\1 \2/p')
   echo "Lower hardware limits detected:"
-  echo "$hardware_limit_min"
+  echo "$hardware_limit_min" | uniq
 
   if [ -z "$hardware_limit_min" ]; then
     echo "Error: Hardware limits not found"
@@ -205,21 +203,12 @@ else
     # Set the CPU governor to powersave
     echo "Battery mode detected - Setting CPU governor to powersave"
 
-    if [ $interactive -eq 1 ]; then
-      echo "Press any key to continue"
-      read -n 1 -s
-    fi
-
     select_powersave
 
   else
     # Set the CPU governor to performance
     echo "AC power detected - Setting CPU governor to performance"
 
-    if [ $interactive -eq 1 ]; then
-      echo "Press any key to continue"
-      read -n 1 -s
-    fi
 
     select_performance
   fi
