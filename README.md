@@ -10,4 +10,7 @@ I highly recommend that you run add-to-path.sh and add the current directory to 
 - *fixgamepad.sh* : Support for generic USB controllers if they happend not to work out of the box.
 - *fancontrol.sh* : Fan speeds and temp stats
 - *predator300.sh* : Predator specific hardware tools (rgb keyboard, turbo fan mode)
-- *nvidia.sh* : some nvidia tools, show usage, set clock speeds.  
+- *nvidia.sh* : some nvidia tools, show usage, set clock speeds.
+  
+### Laptop tools:
+- *update-power-mode.sh* : Update CPU clock speeds depending on the current power mode (Battery/AC). Supports some basic arguments check them with -h.
