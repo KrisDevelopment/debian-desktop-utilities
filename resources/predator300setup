@@ -10,7 +10,7 @@
 ### END INIT INFO
 
 # Define variables
-SCRIPT_DIR="/home/kris/debian-desktop-utilities/predator-turbo"
+SCRIPT_DIR=
 SCRIPT="install.sh"
 LOG_FILE="/var/log/predator300setup.log"
 

@@ -3,6 +3,8 @@
 # TURBO and keyboard control for Predator Helios 300
 # Note: root user PATH doesn't include this script, that's why I run sudo inside.
 
+script_dir_arg=$(dirname "$0")
+
 # functions
 install() {
 
@@ -32,6 +34,10 @@ install() {
         # copy the script from /resources/predator300setup to init.d
         echo "Copying predator300setup to /etc/init.d"
         sudo cp $script_dir_arg/resources/predator300setup /etc/init.d/predator300setup
+
+        # replace SCRIPT_DIR= with the actual script directory of predator-turbo
+        sudo sed -i "s|SCRIPT_DIR=.*|SCRIPT_DIR=$script_dir_arg/predator-turbo|" /etc/init.d/predator300setup
+        
         sudo chmod +x /etc/init.d/predator300setup
         # reload the init.d scripts
         sudo systemctl daemon-reload
@@ -42,7 +48,6 @@ install() {
 }
 
 keyboard() {
-    script_dir_arg=$(dirname "$0")
     echo "Installing Predator Turbo from $script_dir_arg"
     cd $script_dir_arg/predator-turbo
     sudo python3 keyboard.py
