@@ -3,7 +3,22 @@
 # Set the CPU power mode based on whether the laptop is running on battery or AC power
 # Note: Governors don't work on all CPUs. This script sets the clock speeds to the maximum or minimum using the scaling_max_freq file.
 
-# Usage:
+
+# Discharging means the laptop is running on battery
+battery_mode=$(cat /sys/class/power_supply/BAT0/status)
+
+# List only -l
+
+if [ "$1" = "-l" ]; then
+  cpufreq-info | grep "current policy" | uniq
+  echo "Battery mode: $battery_mode"
+  exit 0
+fi
+
+# ========================
+# Usage: 
+# ========================
+
 echo "=== update-power-mode.sh [options] ==="
 echo "Supported single options:"
 echo "  -m [Mhz]: Manual mode, set the max CPU frequency to [Mhz]"
@@ -11,11 +26,48 @@ echo "  -p: Force performance mode"
 echo "  -s: Force powersave mode"
 echo "  -h: Display this help message"
 echo "  -y: Skip confirmations in default mode" # If runing without any custom options and userspace governor is not enabled, this will skip the confirmation prompt
+echo "  -l: Show current power mode"
+echo "  -i: Install as a service"
 echo "======================================"
 
 if [ "$1" = "-h" ]; then
   exit 0
 fi
+
+script_path=$(realpath $0)
+
+# ========================
+# Install as a service
+# ========================
+
+# Makes udev rule to run the script when AC power is changed
+install()
+{
+  echo "Installing as a service"
+
+  # Create a udev rule to run the script when AC power is changed
+  echo "Creating udev rule"
+
+  # Switch to battery mode
+  sudo echo "SUBSYSTEM==\"power_supply\", ATTR{online}==\"0\", RUN+=\"$script_path -s\"" | sudo tee /etc/udev/rules.d/99-power-mode.rules
+  # Switch to AC power
+  sudo echo "SUBSYSTEM==\"power_supply\", ATTR{online}==\"1\", RUN+=\"$script_path -p\"" | sudo tee -a /etc/udev/rules.d/99-power-mode.rules
+
+  # Reload the udev rules
+  echo "Reloading udev rules"
+  sudo udevadm control --reload-rules
+
+  echo "Done"
+  exit 0
+}
+
+if [ "$1" = "-i" ]; then
+  install
+fi
+
+# ========================
+# Logic
+# ========================
 
 set_frequency=0
 forced_performance=0
@@ -73,9 +125,6 @@ if ! cpufreq-info | grep "userspace" > /dev/null 2>&1; then
   echo passive | sudo tee /sys/devices/system/cpu/intel_pstate/status
   cpufreq-info | grep "available cpufreq governors" | uniq
 fi
-
-# Discharging means the laptop is running on battery
-battery_mode=$(cat /sys/class/power_supply/BAT0/status)
 
 set_max_scaling_freq () {
   # Set the CPU frequency to the specified value in Mhz
