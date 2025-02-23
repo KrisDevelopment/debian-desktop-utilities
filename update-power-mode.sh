@@ -49,9 +49,9 @@ install()
   echo "Creating udev rule"
 
   # Switch to battery mode
-  sudo echo "SUBSYSTEM==\"power_supply\", ATTR{online}==\"0\", RUN+=\"$script_path -s\"" | sudo tee /etc/udev/rules.d/99-power-mode.rules
+  sudo echo "SUBSYSTEM==\"power_supply\", ATTR{online}==\"0\", RUN+=\"$script_path\"" | sudo tee /etc/udev/rules.d/99-power-mode.rules
   # Switch to AC power
-  sudo echo "SUBSYSTEM==\"power_supply\", ATTR{online}==\"1\", RUN+=\"$script_path -p\"" | sudo tee -a /etc/udev/rules.d/99-power-mode.rules
+  sudo echo "SUBSYSTEM==\"power_supply\", ATTR{online}==\"1\", RUN+=\"$script_path\"" | sudo tee -a /etc/udev/rules.d/99-power-mode.rules
 
   # Reload the udev rules
   echo "Reloading udev rules"
