@@ -3,6 +3,9 @@
 # Set the CPU power mode based on whether the laptop is running on battery or AC power
 # Note: Governors don't work on all CPUs. This script sets the clock speeds to the maximum or minimum using the scaling_max_freq file.
 
+# Sleep a little to allow the system to detect the battery status when mode changes
+# Sometimes the battery status is not updated immediately.
+sleep 1
 
 # Discharging means the laptop is running on battery
 battery_mode=$(cat /sys/class/power_supply/BAT0/status)
