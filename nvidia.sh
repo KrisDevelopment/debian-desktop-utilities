@@ -1,5 +1,32 @@
 #!/bin/bash
 
+# usage: nvidia.sh
+# usage: nvidia.sh --min-max 300 2100
+
+arg_func=$1 # --min-max, --reset
+
+# opt to use args for min and max
+arg_min=$2
+arg_max=$3
+
+# ---------------------------------------
+
+if [ "$arg_func" == "--min-max" ] && [ -n "$arg_min" ] && [ -n "$arg_max" ]; then
+    echo "Setting Nvidia GPU clock speed to $arg_min, $arg_max"
+    sudo nvidia-smi -lgc $arg_min,$arg_max
+    exit
+fi
+
+
+# arg --reset to reset to default
+if [ "$arg_func" == "--reset" ]; then
+    sudo nvidia-smi -rgc
+    echo "Reset GPU clock speed to default"
+    exit
+fi
+
+# ---------------------------------------
+
 # functions
 show_gpu_info() {
     echo "GPU info"
@@ -62,7 +89,6 @@ cooler_control() {
     fi
 
 }
-# ---------------------------------------
 
 set_clock_speed() {
     echo "Set clock speed"
@@ -98,14 +124,22 @@ set_power_limit() {
 
     read -p "Enter new power limit (W) : " power_limit
 
-    echo "nvidia-smi -pl $power_limit"
-    sudo nvidia-smi -pl $power_limit
+    read -p "Enter GPU number (0 default): " gpu_number
+    if [ -z "$gpu_number" ]; then
+        gpu_number=0
+    fi
+
+    echo "nvidia-smi -pl $gpu_number $power_limit"
+    sudo nvidia-smi -pl $gpu_number $power_limit
 
     echo "New power limit"
     sudo nvidia-smi -q -d POWER | grep "Power Limit"
 
     echo "Done"
 }
+
+
+# ---------------------------------------
 
 # array of menu options
 options=(
