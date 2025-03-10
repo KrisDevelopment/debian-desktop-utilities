@@ -46,6 +46,11 @@ script_path=$(realpath $0)
 # Makes udev rule to run the script when AC power is changed
 install()
 {
+
+  echo $(dirname "$(readlink -f "$0")")
+  script_dir_arg=$(dirname "$(readlink -f "$0")")
+
+  # RUN ON AC CHANGE
   echo "Installing as a service"
 
   # Create a udev rule to run the script when AC power is changed
@@ -59,6 +64,22 @@ install()
   # Reload the udev rules
   echo "Reloading udev rules"
   sudo udevadm control --reload-rules
+
+  # RUN ON BOOT
+  echo "Making the install run on boot..."
+  # copy the script from /resources/update-power-mode to init.d
+  echo "Copying to /etc/init.d"
+  sudo cp $script_dir_arg/resources/update-power-mode /etc/init.d/update-power-mode
+
+  # replace SCRIPT_DIR= with the actual script directory of update-power-mode.sh
+  sudo sed -i "s|SCRIPT_DIR=.*|SCRIPT_DIR=$script_dir_arg|" /etc/init.d/update-power-mode
+  
+  sudo chmod +x /etc/init.d/update-power-mode
+  # reload the init.d scripts
+  sudo systemctl daemon-reload
+  sudo update-rc.d update-power-mode defaults
+  # enable the service
+  sudo systemctl enable update-power-mode
 
   echo "Done"
   exit 0

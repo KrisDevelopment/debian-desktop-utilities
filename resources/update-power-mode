@@ -1,0 +1,56 @@
+#!/bin/bash
+
+### BEGIN INIT INFO
+# Provides:          update-power-mode
+# Required-Start:    $remote_fs $syslog
+# Required-Stop:     $remote_fs $syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:
+# Short-Description: updates power mode on startup
+### END INIT INFO
+
+# Define variables
+SCRIPT_DIR=
+SCRIPT="update-power-mode.sh"
+LOG_FILE="/var/log/update-power-mode.log"
+
+# Logging function 
+log_message() {
+    echo "$(date) - $1" >> "$LOG_FILE"
+}
+
+log_message "Starting update-power-mode setup"
+
+case "$1" in
+    start)
+        log_message "Starting update-power-mode"
+        cd "$SCRIPT_DIR" || {
+            log_message "Failed to change directory to $SCRIPT_DIR"
+            exit 1
+        }
+        if [ -x "$SCRIPT" ]; then
+            ./"$SCRIPT" -y >> "$LOG_FILE" 2>&1
+            log_message "Executed $SCRIPT successfully"
+        else
+            log_message "Script $SCRIPT is not executable"
+            exit 1
+        fi
+        ;;
+    stop)
+        log_message "Stopping update-power-mode"
+        # Add any cleanup logic here if needed
+        ;;
+    restart|reload|force-reload)
+        "$0" stop
+        "$0" start
+        ;;
+    status)
+        log_message "Checking status of predator_setup"
+        # Optionally implement status reporting here
+        ;;
+    *)
+        echo "Usage: $0 {start|stop|status|restart}" >&2
+        exit 3
+        ;;
+esac
+exit 0
