@@ -9,6 +9,12 @@ sleep 1
 
 # Discharging means the laptop is running on battery
 battery_mode=$(cat /sys/class/power_supply/BAT0/status)
+is_interactive_shell=0
+if [ -t 0 ]; then
+  is_interactive_shell=1
+  echo "Interactive shell detected"
+fi
+
 
 # List only -l
 
@@ -28,7 +34,6 @@ echo "  -m [Mhz]: Manual mode, set the max CPU frequency to [Mhz]"
 echo "  -p: Force performance mode"
 echo "  -s: Force powersave mode"
 echo "  -h: Display this help message"
-echo "  -y: Skip confirmations in default mode" # If runing without any custom options and userspace governor is not enabled, this will skip the confirmation prompt
 echo "  -l: Show current power mode"
 echo "  -i: Install as a service"
 echo "======================================"
@@ -96,7 +101,6 @@ fi
 set_frequency=0
 forced_performance=0
 forced_powersave=0
-skip_confirmation=0
 
 if [ "$1" = "-m" ]; then
   if [ -z "$2" ]; then
@@ -108,8 +112,6 @@ elif [ "$1" = "-p" ]; then
   forced_performance=1
 elif [ "$1" = "-s" ]; then
   forced_powersave=1
-elif [ "$1" = "-y" ]; then
-  skip_confirmation=1
 fi
 
 # Install cpufrequtils if not installed
@@ -136,26 +138,41 @@ fi
 
 # To enable userspace governor ()
 if ! cpufreq-info | grep "userspace" > /dev/null 2>&1; then
-  if [ $skip_confirmation -eq 0 ]; then
-    echo "Warning: userspace governor not found. Enabling userspace governor will allow the script to set the CPU frequency. Do you want to enable userspace governor? (y/n)"
-    read enable_userspace
-    if [ "$enable_userspace" != "y" ]; then
-      echo "Exiting"
-      exit 0
-    fi
-  fi
-
-  echo "Enabling userspace governor"
+  echo "Warning: userspace governor not found. Enabling userspace governor to allow the script to set the CPU frequency."
   echo passive | sudo tee /sys/devices/system/cpu/intel_pstate/status
   cpufreq-info | grep "available cpufreq governors" | uniq
 fi
+
+set_governor() {
+  governor=$1
+  echo "Setting CPU governor to $governor"
+  sudo cpufreq-set -r -g $governor
+
+  # if the governor is not set (cat /sys/devices/system/cpu/cpufreq/policy*/scaling_governor), set them manually
+  governors=$(cat /sys/devices/system/cpu/cpufreq/policy*/scaling_governor | uniq)
+  if [ "$governors" != "$governor" ]; then
+    echo "Error: Failed to set CPU governor to $governor. Attempting to force set the governor."
+    echo $governor | sudo tee /sys/devices/system/cpu/cpufreq/policy*/scaling_governor
+  fi
+}
+
+is_governor_equal() {
+  governor=$1
+  current_governor=$(cat /sys/devices/system/cpu/cpufreq/policy*/scaling_governor | uniq)
+  
+  if [ "$current_governor" = "$governor" ]; then
+    return 1
+  else
+    return 0
+  fi
+}
 
 set_max_scaling_freq () {
   # Set the CPU frequency to the specified value in Mhz
   echo "Setting CPU frequency to $1 Mhz"
   
   # Set the CPU governor to userspace
-  sudo cpufreq-set -r -g userspace
+  set_governor userspace
 
   # Convert to khz
   khz=$(echo "$1 * 1000" | bc)
@@ -219,7 +236,7 @@ select_performance() {
 
   # Finally restore the CPU governor to performance
   echo "Restoring CPU governor to performance"
-  sudo cpufreq-set -r -g performance
+  set_governor performance
 }
 
 select_powersave() {
@@ -251,12 +268,15 @@ select_powersave() {
 
   # Set the CPU governor to powersave
   echo "Setting CPU governor to powersave"
-  sudo cpufreq-set -r -g powersave
+  set_governor powersave
 }
 
 if [ $set_frequency -ne 0 ]; then
+  # select userspace governor
+  set_governor userspace
+  echo "Setting CPU governor to userspace"
   set_max_scaling_freq $set_frequency
-  
+
   # https://askubuntu.com/questions/1529885/missing-cpu-scaling-governors
   # https://www.linuxquestions.org/questions/slackware-14/locking-all-cpu%27s-to-their-maximum-frequency-4175607506/?__cf_chl_tk=e03Wgl9HbhjSjVtKWZ3m6NuleczCmPMrq8JTO7DqM8w-1738663094-1.0.1.1-YO980BksCbmf9D2835JckKVYo3fNhIL9e2rPPDS2naQ
   # https://askubuntu.com/questions/1482295/cpufreq-set-not-taking-effect-on-fixing-cpu-frequency-on-ubuntu-20
@@ -280,9 +300,24 @@ else
 
   else
     # Set the CPU governor to performance
+
+    # if interactive shell, and userspace governor is selected, then ask for confirmation, otherwise abort
+    if ! is_governor_equal userspace; then
+      if [ $is_interactive_shell -eq 1 ]; then
+        # interactive shell
+        echo "Warning: The script is about to unset the current CPU 'userspace' governor. This may cause the CPU to run at the maximum frequency. Continue? [y/n]"
+        read -r response
+        if [ "$response" != "y" ]; then
+          echo "Aborted"
+          exit 0
+        fi
+      else
+        echo "Warning: The CPU governor is set to 'userspace'. Aborting."
+        exit 0
+      fi
+    fi
+
     echo "AC power detected - Setting CPU governor to performance"
-
-
     select_performance
   fi
 fi
