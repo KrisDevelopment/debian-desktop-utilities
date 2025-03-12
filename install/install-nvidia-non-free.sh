@@ -34,7 +34,7 @@ apt install -y linux-headers-$(uname -r)
 echo "Installing NVIDIA drivers..."
 echo "Please select the appropriate driver version from the list below:"
 apt-cache search nvidia-driver
-read -p "Enter the driver version to install (e.g., nvidia-driver-460) or leave empty for default: " driver_version
+read -p "Enter the driver version to install (e.g., nvidia-driver) or leave empty for default: " driver_version
 
 if [ -z "$driver_version" ]; then
   driver_version="nvidia-driver"

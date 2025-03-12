@@ -40,7 +40,7 @@ show_gpu_info() {
 
 install_nvidia_driver() {
     # warn and confirm
-    echo "This will install Nvidia driver 440 and tools. No responsibility for any damage."
+    echo "This will install Nvidia driver and tools. No responsibility for any damage."
     read -p "Continue? (y/n): " confirm
     if [ "$confirm" != "y" ]; then
         return
@@ -48,8 +48,7 @@ install_nvidia_driver() {
 
     # run the installation script from install/install-nvidia-non-free.sh
     script_dir=$(dirname "$(realpath "$0")")
-    $script_dir/install/install-nvidia-non-free.sh
-
+    sudo $script_dir/install/install-nvidia-non-free.sh
 }
 
 notebook_fan_control() {
@@ -138,14 +137,13 @@ set_power_limit() {
     echo "Done"
 }
 
-
 # ---------------------------------------
 
 # array of menu options
 options=(
     "Quit"
     "Show GPU info"
-    "Install Nvidia driver"
+    "Install or update Nvidia driver"
     "Fan and Temp Controls"
     "Set GPU clock speed",
     "Set GPU power limit",
