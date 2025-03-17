@@ -29,12 +29,20 @@ fi
 
 # functions
 show_gpu_info() {
-    echo "GPU info"
-    echo "--------"
+    echo "============================"
+    echo "    GPU info"
+    echo "----------------------------"
+    
+    nvidia-smi -q
+
+    echo "----------------------------"
+
     echo "lspci | grep -i nvidia"
     lspci | grep -i nvidia
-    echo ""
-    echo "nvidia-smi"
+    
+    echo "----------------------------"
+    echo "Compact view:"
+
     nvidia-smi
 }
 
@@ -137,6 +145,22 @@ set_power_limit() {
     echo "Done"
 }
 
+disable_persistence_mode() {
+    echo "Disable persistence mode"
+    echo "------------------------"
+
+    echo "nvidia-smi -pm 0"
+    sudo nvidia-smi -pm 0
+}
+
+enable_persistence_mode() {
+    echo "Enable persistence mode"
+    echo "------------------------"
+
+    echo "nvidia-smi -pm 1"
+    sudo nvidia-smi -pm 1
+}
+
 # ---------------------------------------
 
 # array of menu options
@@ -147,6 +171,8 @@ options=(
     "Fan and Temp Controls"
     "Set GPU clock speed",
     "Set GPU power limit",
+    "Disable persistence mode",
+    "Enable persistence mode"
 )
 
 while true; do
@@ -163,6 +189,8 @@ while true; do
     3) notebook_fan_control ;;
     4) set_clock_speed ;;
     5) set_power_limit ;;
+    6) disable_persistence_mode ;;
+    7) enable_persistence_mode ;;
     *) echo "Invalid option" ;;
     esac
 

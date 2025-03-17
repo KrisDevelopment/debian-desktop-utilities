@@ -13,19 +13,23 @@ if ! command -v whiptail &> /dev/null; then
     fi
 fi
 
-# array of menu options by querying the scripts in the directory
+# Array of menu options by querying the scripts in the directory
 options=("Quit")
 script_dir_arg=$(dirname "$0")
-for script in $(ls $script_dir_arg/*.sh); do
-    # script_name=$(basename "$script")
-    # options+=("$script_name")
+for script in "$script_dir_arg"/*.sh; do
     options+=("$script")
 done
 
+# Define colors
+colors=("\e[1;91m" "\e[1;32m" "\e[1;33m" "\e[1;34m" "\e[1;35m" "\e[1;36m") # Red, Green, Yellow, Blue, Magenta, Cyan
+reset_color="\e[0m"
+
 while true; do
-    # display menu as 1 2 3 ..
+    echo
+    # Display menu with alternating colors
     for i in "${!options[@]}"; do
-        printf "%s %s\n" "$i": "${options[$i]}"
+        color="${colors[i % ${#colors[@]}]}"  # Cycle through colors
+        printf "%b%s %s%b\n" "$color" "$i:" "${options[$i]}" "$reset_color"
     done
 
     read -p "Enter option: " option
