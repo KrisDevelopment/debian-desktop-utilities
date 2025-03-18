@@ -177,6 +177,7 @@ options=(
     "Enable persistence mode"
 )
 
+
 while true; do
     # display menu as 1 2 3 ..
     for i in "${!options[@]}"; do
