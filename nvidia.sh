@@ -163,6 +163,8 @@ enable_persistence_mode() {
 
 # ---------------------------------------
 
+# ------
+
 # array of menu options
 options=(
     "Quit"
