@@ -2,6 +2,8 @@
 
 echo "Unsetting all Git credentials and caches..."
 
+read -p "Are you sure you want to remove all Git credentials and caches? [y/N] " -n 1 -r
+
 # Unset Git credentials stored in the global config
 git config --global --unset credential.helper
 git config --global --unset user.name
