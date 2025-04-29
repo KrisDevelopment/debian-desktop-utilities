@@ -2,7 +2,7 @@
 
 # TURBO and keyboard control for Predator Helios 300
 # Note: root user PATH doesn't include this script, that's why I run sudo inside.
-
+set -e
 script_dir_arg=$(dirname "$0")
 
 # functions
