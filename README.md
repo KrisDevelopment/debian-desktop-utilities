@@ -14,3 +14,12 @@ I highly recommend that you run add-to-path.sh and add the current directory to 
   
 ### Laptop tools:
 - *update-power-mode.sh* : Update CPU clock speeds depending on the current power mode (Battery/AC). Supports some basic arguments check them with -h.
+
+
+### Hardware info and control:
+- *hardware-info.sh* : Full hardware info, CPU, GPU, RAM etc.
+- *predator300.sh* : Turbo and neon keyboard for predator laptop
+- *ls-devices* : Full list of disks and devices
+- *disk-utiles* : Mount, unmount, format.
+- *nvidia.sh* : Nvidia tools.
+- *audo-select-pipewire/pulseaudio* : Select sound driver.
