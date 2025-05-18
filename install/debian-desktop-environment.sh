@@ -1,7 +1,7 @@
 #!/bin/bash
 
 echo "Select a desktop environment to install:"
-echo "1) LXQt"
+echo "1) Plasma"
 echo "2) Cinnamon"
 echo "3) XFCE"
 read -p "Enter your choice (1/2/3): " choice
@@ -10,7 +10,7 @@ sudo apt update
 
 case $choice in
     1)
-        sudo apt install lxqt sddm
+        sudo apt install plasma-desktop sddm
         ;;
     2)
         sudo apt install cinnamon lightdm
