@@ -114,7 +114,7 @@ format_cfdisk() {
 echo "This script will help you format/mount/unmount a disk permanently or temporarily on your system."
 
 echo "Select action:"
-options=("Permanent Mount Device" "Temporary Mount Device" "Mount NFS" "Unmount" "Format")
+options=("Permanent Mount Device" "Temporary Mount Device" "Mount NFS" "Unmount" "Format" "Show Disk I/O")
 script_dir=$(dirname "$(realpath "$0")")
 
 select option in "${options[@]}"; do
@@ -179,6 +179,14 @@ select option in "${options[@]}"; do
 			exit 1
 		fi
 
+		break
+		;;
+	"Show Disk I/O")
+		sudo iotop -ao || {
+			echo "iotop is not installed. Please install it using your package manager."
+			exit 1
+		}
+	
 		break
 		;;
 	*)
