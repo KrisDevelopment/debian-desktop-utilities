@@ -11,6 +11,13 @@ I highly recommend that you run add-to-path.sh and add the current directory to 
 - *fancontrol.sh* : Fan speeds and temp stats
 - *predator300.sh* : Predator specific hardware tools (rgb keyboard, turbo fan mode)
 - *nvidia.sh* : some nvidia tools, show usage, set clock speeds.
+
+### Gaming tips:
+When running a game on a laptop with Nvidia GPU and you can't get it to render throug the dedicated GPU, launch the app with this:
+```
+__NV_PRIME_RENDER_OFFLOAD=1 __GLX_VENDOR_LIBRARY_NAME=nvidia
+```
+Or if you are doing it through Steam, add that same string in the launch params.
   
 ### Laptop tools:
 - *update-power-mode.sh* : Update CPU clock speeds depending on the current power mode (Battery/AC). Supports some basic arguments check them with -h.
