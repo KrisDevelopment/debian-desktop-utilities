@@ -11,7 +11,7 @@ fi
 # Function to list disks with their GUIDs
 list_disks() {
 	echo "Available disks and their GUIDs:"
-	lsblk -o NAME,UUID,MOUNTPOINT,FSTYPE,SIZE | grep -v "loop"
+	sudo lsblk -o NAME,UUID,MOUNTPOINT,FSTYPE,SIZE | grep -v "loop"
 	echo ""
 }
 
@@ -37,7 +37,7 @@ add_to_fstab() {
 
 	if [ "$fstype" == "auto" ]; then
 		echo "Auto-detecting filesystem type..."
-		fstype=$(lsblk -o FSTYPE -n "/dev/disk/by-uuid/$uuid")
+		fstype=$(sudo lsblk -o FSTYPE -n "/dev/disk/by-uuid/$uuid")
 		echo "Detected filesystem type: $fstype"
 	fi
 
@@ -74,12 +74,12 @@ add_to_fstab() {
 
 # Function to list block devices (not partitions)
 list_devices() {
-	devices=($(lsblk -d -n -o NAME | grep '^sd'))
+	devices=($(sudo lsblk -d -n -o NAME | grep '^sd'))
 	device_menu=()
 
 	for i in "${!devices[@]}"; do
 		device_name=${devices[$i]}
-		device_info=$(lsblk -d -n -o SIZE,MODEL "/dev/$device_name")
+		device_info=$(sudo lsblk -d -n -o SIZE,MODEL "/dev/$device_name")
 		device_menu+=("$i" "/dev/$device_name $device_info")
 	done
 }
@@ -114,7 +114,7 @@ format_cfdisk() {
 echo "This script will help you format/mount/unmount a disk permanently or temporarily on your system."
 
 echo "Select action:"
-options=("Permanent Mount Device" "Temporary Mount Device" "Mount NFS" "Unmount" "Format" "Show Disk I/O")
+options=("Permanent Mount Device" "Temporary Mount Device" "Mount NFS" "Unmount" "Format" "Show Disk I/O" "Format SD Card")
 script_dir=$(dirname "$(realpath "$0")")
 
 select option in "${options[@]}"; do
@@ -187,6 +187,20 @@ select option in "${options[@]}"; do
 			exit 1
 		}
 	
+		break
+		;;
+	"Format SD Card")
+		# run ./wipe-sdcard.sh
+
+		script_path="$script_dir/format-sdcard.sh"
+
+		if [ -f "$script_path" ]; then
+			bash "$script_path"
+		else
+			echo "Script not found: $script_path"
+			exit 1
+		fi
+
 		break
 		;;
 	*)
