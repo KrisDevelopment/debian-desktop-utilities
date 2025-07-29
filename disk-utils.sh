@@ -114,7 +114,7 @@ format_cfdisk() {
 echo "This script will help you format/mount/unmount a disk permanently or temporarily on your system."
 
 echo "Select action:"
-options=("Permanent Mount Device" "Temporary Mount Device" "Mount NFS" "Unmount" "Format" "Show Disk I/O" "Format SD Card")
+options=("Permanent Mount Device" "Temporary Mount Device" "Mount NFS" "Unmount" "Format disk or flash" "Format SD Card" "Show Disk I/O")
 script_dir=$(dirname "$(realpath "$0")")
 
 select option in "${options[@]}"; do
@@ -167,7 +167,7 @@ select option in "${options[@]}"; do
 
 		break
 		;;
-	"Format")
+	"Format disk or flash")
 		list_devices
 		select_device
 		format_cfdisk
@@ -181,26 +181,28 @@ select option in "${options[@]}"; do
 
 		break
 		;;
+	"Format SD Card")
+		# run ./wipe-sdcard.sh
+		list_devices
+		select_device
+
+		script_path="$script_dir/format-sdcard.sh"
+
+		if [ -f "$script_path" ]; then
+			bash "$script_path" "$device"
+		else
+			echo "Script not found: $script_path"
+			exit 1
+		fi
+
+		break
+		;;
 	"Show Disk I/O")
 		sudo iotop -ao || {
 			echo "iotop is not installed. Please install it using your package manager."
 			exit 1
 		}
 	
-		break
-		;;
-	"Format SD Card")
-		# run ./wipe-sdcard.sh
-
-		script_path="$script_dir/format-sdcard.sh"
-
-		if [ -f "$script_path" ]; then
-			bash "$script_path"
-		else
-			echo "Script not found: $script_path"
-			exit 1
-		fi
-
 		break
 		;;
 	*)
