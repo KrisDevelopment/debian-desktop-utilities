@@ -220,39 +220,33 @@ parse_frequency_str_to_mhz() {
 }
 
 select_performance() {
-  # First restore the user space frequency to the hardware limit
   echo "Performance mode selected - Setting CPU frequency to hardware limit"
 
-  # get hardware limits
-  # Eg parse "  hardware limits: 800 MHz - 5.00 GHz" to get 5.00 GHz
-  hardware_limit_max=$(cpufreq-info | grep "hardware limits" | sed -n 's/.*\([0-9]\.[0-9][0-9] \(MHz\|GHz\)\).*/\1/p')
+  # extract all upper hardware limits
+  hardware_limit_max=$(cpufreq-info | grep "hardware limits" | sed -n 's/.*- \([0-9]\+\.[0-9]\+ \(MHz\|GHz\)\).*/\1/p')
+
   echo "Upper hardware limits detected:"
-  echo "$hardware_limit_max" | uniq
+  echo "$hardware_limit_max"
 
   if [ -z "$hardware_limit_max" ]; then
     echo "Error: Hardware limits not found"
     exit 1
   fi
 
-  # $hardware_limit_max is a list of frequencies
-  # We want the last one
-  max_frequency=$(echo "$hardware_limit_max" | tail -n 1)
+  # convert all to MHz and find the maximum
+  mhz=$(echo "$hardware_limit_max" | while read f; do parse_frequency_str_to_mhz "$f"; done | sort -nr | head -n1)
 
-
-  # parse GHz to Mhz, and preserve Mhz as is
-  mhz=$(parse_frequency_str_to_mhz "$max_frequency")
-  
-  if [ $mhz -eq 0 ]; then
-    echo "Error: Internal error - Invalid frequency. Failed to parse $max_frequency"
+  if [ "$mhz" -eq 0 ]; then
+    echo "Error: Internal error - Invalid frequency. Failed to parse"
     exit 1
   fi
 
-  set_max_scaling_freq $mhz
+  set_max_scaling_freq "$mhz"
 
-  # Finally restore the CPU governor to performance
   echo "Restoring CPU governor to performance"
   set_governor performance
 }
+
 
 select_powersave() {
   # First first set the user space frequency to the lowest possible
