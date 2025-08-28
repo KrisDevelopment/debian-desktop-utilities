@@ -7,8 +7,28 @@
 # Sometimes the battery status is not updated immediately.
 sleep 1
 
+
+#!/bin/bash
+
+# Find first available battery
+battery_path="/sys/class/power_supply/BAT0"
+
+# ensure BAT0 is present
+if [ ! -d $battery_path ]; then
+
+  # Find first available battery
+  battery_path="/sys/class/power_supply/BAT1"
+
+  # ensure BAT0 is present
+  if [ ! -d $battery_path ]; then
+    echo "Error: Battery path not found - $battery_path"
+    exit 1
+  fi
+fi
+
 # Discharging means the laptop is running on battery
-battery_mode=$(cat /sys/class/power_supply/BAT0/status)
+battery_mode=$(cat $battery_path/status)
+
 is_interactive_shell=0
 if [ -t 0 ]; then
   is_interactive_shell=1
@@ -130,11 +150,6 @@ if ! cpufreq-info | grep "performance" > /dev/null 2>&1; then
   exit 1
 fi
 
-# ensure BAT0 is present
-if [ ! -d /sys/class/power_supply/BAT0 ]; then
-  echo "Error: BAT0 not found"
-  exit 1
-fi
 
 # To enable userspace governor ()
 if ! cpufreq-info | grep "userspace" > /dev/null 2>&1; then
