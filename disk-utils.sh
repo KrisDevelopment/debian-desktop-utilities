@@ -172,12 +172,10 @@ select option in "${options[@]}"; do
 		select_device
 		format_cfdisk
 
-		if [ -f "$script_path" ]; then
-			bash "$script_path"
-		else
-			echo "Script not found: $script_path"
+		gparted "$device" || {
+			echo "gparted is not installed. Please install it using your package manager."
 			exit 1
-		fi
+		}
 
 		break
 		;;
