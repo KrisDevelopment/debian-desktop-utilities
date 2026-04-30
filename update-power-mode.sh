@@ -12,6 +12,7 @@ sleep 1
 
 # Find first available battery
 battery_path="/sys/class/power_supply/BAT0"
+system_config="/etc/u-power-mode.conf"
 
 # ensure BAT0 is present
 if [ ! -d $battery_path ]; then
@@ -56,6 +57,7 @@ echo "  -s: Force powersave mode"
 echo "  -h: Display this help message"
 echo "  -l: Show current power mode"
 echo "  -i: Install as a service"
+echo "  -set-config-min-cpu [Mhz]: Set the user-defined minimum CPU frequency to [Mhz] (effective in powersave mode)"
 echo "======================================"
 
 if [ "$1" = "-h" ]; then
@@ -114,6 +116,39 @@ if [ "$1" = "-i" ]; then
   install
 fi
 
+
+# ========================
+# Config management
+# ========================
+
+# Read-write system-wide config
+get_config_min_cpu() {
+  # Get the minimum user-defined CPU frequency for all users. 
+  # The config file is expected to have a line like "MIN_CPU_FREQUENCY=800" (in MHz)
+  if [ -f $system_config ]; then
+    min_cpu_frequency=$(grep "MIN_CPU_FREQUENCY" $system_config | cut -d= -f2)
+    echo $min_cpu_frequency
+  else
+    echo ""
+  fi
+}
+
+set_config_min_cpu() {
+  # Set the minimum user-defined CPU frequency for all users. 
+  # The config file is expected to have a line like "MIN_CPU_FREQUENCY=800" (in MHz)
+  if [ -f $system_config ]; then
+    if grep -q "MIN_CPU_FREQUENCY" $system_config; then
+      sudo sed -i "s/MIN_CPU_FREQUENCY=.*/MIN_CPU_FREQUENCY=$1/" $system_config
+    else
+      echo "MIN_CPU_FREQUENCY=$1" | sudo tee -a $system_config
+    fi
+  else
+    echo "MIN_CPU_FREQUENCY=$1" | sudo tee $system_config
+  fi
+
+  sudo chmod 644 $system_config
+}
+
 # ========================
 # Logic
 # ========================
@@ -132,6 +167,14 @@ elif [ "$1" = "-p" ]; then
   forced_performance=1
 elif [ "$1" = "-s" ]; then
   forced_powersave=1
+elif [ "$1" = "-set-config-min-cpu" ]; then
+  if [ -z "$2" ]; then
+    echo "Error: Missing frequency value"
+    exit 1
+  fi
+  set_config_min_cpu $2
+  echo "Set user-defined minimum CPU frequency to $2 MHz. Exiting."
+  exit 0
 fi
 
 # Install cpufrequtils if not installed
@@ -157,6 +200,7 @@ if ! cpufreq-info | grep "userspace" > /dev/null 2>&1; then
   echo passive | sudo tee /sys/devices/system/cpu/intel_pstate/status
   cpufreq-info | grep "available cpufreq governors" | uniq
 fi
+
 
 set_governor() {
   governor=$1
@@ -267,6 +311,15 @@ select_powersave() {
   min_frequency=$(echo "$hardware_limit_min" | head -n 1)
 
   mhz=$(parse_frequency_str_to_mhz "$min_frequency")
+
+  user_mhz=$(get_config_min_cpu)
+  if [ -n "$user_mhz" ]; then
+    echo "User-defined minimum CPU frequency detected: $user_mhz MHz"
+    if [ $user_mhz -gt $mhz ]; then
+      echo "Using user-defined minimum CPU frequency: $user_mhz MHz"
+      mhz=$user_mhz
+    fi
+  fi
 
   if [ $mhz -eq 0 ]; then
     echo "Error: Internal error - Invalid frequency. Failed to parse $min_frequency"
