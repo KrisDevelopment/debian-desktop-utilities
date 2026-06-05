@@ -114,7 +114,7 @@ format_cfdisk() {
 echo "This script will help you format/mount/unmount a disk permanently or temporarily on your system."
 
 echo "Select action:"
-options=("Permanent Mount Device" "Temporary Mount Device" "Mount NFS" "Unmount" "Format disk or flash" "Format SD Card" "Show Disk I/O")
+options=("Permanent Mount Device" "Temporary Mount Device" "Mount NFS" "Unmount" "Format disk or flash" "Format SD Card" "Show Disk I/O" "Show Disk Space")
 script_dir=$(dirname "$(realpath "$0")")
 
 select option in "${options[@]}"; do
@@ -203,6 +203,22 @@ select option in "${options[@]}"; do
 	
 		break
 		;;
+
+	"Show Disk Space")
+		# run ./show-disk-space.sh
+
+		script_path="$script_dir/show-disk-space.sh"
+
+		if [ -f "$script_path" ]; then
+			bash "$script_path"
+		else
+			echo "Script not found: $script_path"
+			exit 1
+		fi
+
+		break
+		;;
+	
 	*)
 		echo "Invalid option. Please select a valid option."
 		;;
